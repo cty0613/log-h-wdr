@@ -1,0 +1,29 @@
+# 데이터·결과 (CLAUDE.md 8절: 커밋 금지)
+/data/
+/results/
+
+# C++ 빌드
+/build/
+/out/
+/vcpkg_installed/
+compile_commands.json
+CMakeUserPresets.json
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# 편집기/OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Claude Code 로컬 설정
+.claude/settings.local.json
+build_configure.log

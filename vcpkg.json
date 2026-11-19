@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "cctvlog",
+  "version": "0.1.0",
+  "builtin-baseline": "e1ff419d28c7f0a94abaf0a848fe0aeeb69b2de3",
+  "dependencies": [
+    "eigen3",
+    {
+      "name": "opencv4",
+      "default-features": false
+    },
+    {
+      "name": "ffmpeg",
+      "default-features": false,
+      "features": ["avcodec", "avformat", "x265"]
+    },
+    "nlohmann-json",
+    "gtest"
+  ]
+}

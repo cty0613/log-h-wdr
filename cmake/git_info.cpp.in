@@ -1,0 +1,10 @@
+// 자동 생성 파일 (cmake/GitInfo.cmake). 직접 수정하지 말 것.
+#include "cctvlog/version.hpp"
+
+namespace cctvlog {
+
+std::string_view version() { return "@PROJECT_VERSION@"; }
+std::string_view git_commit() { return "@GIT_COMMIT@"; }
+bool git_dirty() { return @GIT_DIRTY@; }
+
+}  // namespace cctvlog

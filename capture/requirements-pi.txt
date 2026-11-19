@@ -1,0 +1,7 @@
+# Raspberry Pi 5 촬영 전용 (PC에서는 설치하지 않음).
+# Picamera2/libcamera는 pip가 아니라 Raspberry Pi OS 패키지로 설치한다:
+#   sudo apt install -y python3-picamera2
+# venv는 시스템 패키지를 보이게 만든다:
+#   python3 -m venv --system-site-packages ~/cctvlog-venv
+numpy>=1.24
+pillow>=9.4
