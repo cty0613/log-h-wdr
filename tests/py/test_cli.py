@@ -10,7 +10,13 @@ def test_build_command_formats_args(tmp_path, monkeypatch):
     fake.write_text("")
     monkeypatch.setenv("CCTVLOG_BIN", str(tmp_path))
     cmd = cli.build_command(
-        "curve_eval", "in.npy", config=tmp_path / "c.json", bits=[8, 10], dry_run=True, skip=None
+        "curve_eval",
+        "in.npy",
+        config=tmp_path / "c.json",
+        bits=[8, 10],
+        dry_run=True,
+        skip=None,
+        in_="x",
     )
     assert cmd == [
         str(fake),
@@ -20,6 +26,8 @@ def test_build_command_formats_args(tmp_path, monkeypatch):
         "--bits",
         "8,10",
         "--dry-run",
+        "--in",
+        "x",
     ]
 
 

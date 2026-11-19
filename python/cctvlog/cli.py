@@ -10,6 +10,7 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_BIN_DIR = REPO_ROOT / "build" / "release" / "apps"
+DEFAULT_TEST_BIN_DIR = REPO_ROOT / "build" / "release" / "tests" / "bin"
 
 
 class CppRunError(RuntimeError):
@@ -33,8 +34,14 @@ def bin_dir() -> Path:
     return Path(env).expanduser().resolve() if env else DEFAULT_BIN_DIR
 
 
-def app_path(app: str) -> Path:
-    path = bin_dir() / app
+def tools_bin_dir() -> Path:
+    """테스트 전용 C++ 도구 위치: 환경변수 CCTVLOG_TEST_BIN, 없으면 build/release/tests/bin."""
+    env = os.environ.get("CCTVLOG_TEST_BIN")
+    return Path(env).expanduser().resolve() if env else DEFAULT_TEST_BIN_DIR
+
+
+def app_path(app: str, directory: Path | None = None) -> Path:
+    path = (directory if directory is not None else bin_dir()) / app
     if not path.is_file():
         raise FileNotFoundError(
             f"C++ CLI '{app}' not found at {path}. "
@@ -53,18 +60,21 @@ def _format_value(value: Any) -> str:
     return str(value)
 
 
-def build_command(app: str, *positional: Any, **args: Any) -> list[str]:
+def build_command(
+    app: str, *positional: Any, directory: Path | None = None, **args: Any
+) -> list[str]:
     """`run_cpp`가 실행할 명령 줄을 만든다.
 
-    키워드 인자 `foo_bar=v`는 `--foo-bar v`가 된다. `True`는 값 없는 플래그,
-    `False`/`None`은 생략한다.
+    키워드 인자 `foo_bar=v`는 `--foo-bar v`, `in_=v`는 `--in v`가 된다. `True`는 값 없는 플래그,
+    `False`/`None`은 생략한다. `directory`를 주면 `bin_dir()` 대신 그 폴더에서 찾는다.
     """
-    cmd = [os.fspath(app_path(app))]
+    cmd = [os.fspath(app_path(app, directory))]
     cmd += [_format_value(p) for p in positional]
     for key, value in args.items():
         if value is None or value is False:
             continue
-        flag = "--" + key.replace("_", "-")
+        # 예약어 회피용 끝 밑줄 제거: in_=... → --in
+        flag = "--" + key.rstrip("_").replace("_", "-")
         if value is True:
             cmd.append(flag)
         else:
@@ -73,13 +83,17 @@ def build_command(app: str, *positional: Any, **args: Any) -> list[str]:
 
 
 def run_cpp(
-    app: str, *positional: Any, timeout: float | None = None, **args: Any
+    app: str,
+    *positional: Any,
+    timeout: float | None = None,
+    directory: Path | None = None,
+    **args: Any,
 ) -> subprocess.CompletedProcess[str]:
     """C++ CLI `app`을 실행한다. 실패하면 stderr를 담은 `CppRunError`를 던진다.
 
     예: ``run_cpp("curve_eval", config="configs/curves.json", out=out_dir)``
     """
-    cmd = build_command(app, *positional, **args)
+    cmd = build_command(app, *positional, directory=directory, **args)
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
     if proc.returncode != 0:
         raise CppRunError(cmd, proc.returncode, proc.stdout, proc.stderr)

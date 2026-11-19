@@ -41,3 +41,20 @@
 **버린 대안**
 - 시스템 apt FFmpeg/x265: 버전 고정이 안 되어 재현성이 떨어짐.
 - vcpkg를 submodule로 포함: 저장소가 무거워짐. `VCPKG_ROOT` 환경변수 방식 채택.
+
+---
+
+## 2026-11-20 — npy C++/Python 비트 동일성 검증 (Phase 0 수락 기준)
+
+**결과: 통과.** `tests/py/test_npy_crosscheck.py` 15개 케이스.
+- NumPy `np.save` → C++ `read_npy`가 읽은 버퍼 == `arr.tobytes()`, C++ `write_npy` → `np.load` == 원본. 두 방향 모두 바이트 단위로 비교.
+- 케이스: uint16 2304×1296(전 범위, 10bit RAW), 1×1, float32 3채널, 특수 float(±0, ±inf, NaN payload, subnormal, max), float32 HDR Bayer(0~16), uint8 3채널. npy format v1/v2/v3, 비연속 원본 배열.
+- 거부 확인: big-endian, int16, 1차원, Fortran order는 오류로 끝난다.
+- 민감도 확인: C++ 로더에 1비트 변형을 넣으면 10개 케이스가 실패한다(높이 1인 케이스와 거부 케이스는 이 변형과 무관).
+
+**결정**
+- 교차 검증용 C++ 도구 `npy_roundtrip`은 `tests/cpp/tools/`에 두고 `build/<preset>/tests/bin`에 빌드한다(apps 목록과 분리).
+- `run_cpp(..., directory=...)`로 호출 폴더를 바꿀 수 있게 했다(`cli.tools_bin_dir()`, 환경변수 `CCTVLOG_TEST_BIN`). C++ 호출 경로는 여전히 `run_cpp` 하나뿐이다.
+- `run_cpp` 키워드 인자 끝의 `_`는 떼고 플래그를 만든다(`in_=` → `--in`).
+
+**남은 일**: Pi 실데이터(`data/pi_probe/*/sample/000000.npy`)로도 같은 검증을 1회 수행한다.
