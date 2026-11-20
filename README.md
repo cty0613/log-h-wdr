@@ -3,6 +3,7 @@
 Raspberry Pi 5 + Camera Module 3 RAW에서 브래킷 HDR 합성/DCG 시뮬레이션으로 DR을 확보하고,
 합성 후 노이즈 분포에 맞춘 구간별 노이즈 매칭 Log 곡선(**H-Log**)으로 10bit 보관 스트림을 만드는 실험 저장소.
 개발 명세는 [CLAUDE.md](CLAUDE.md), 결정 기록은 [docs/decisions.md](docs/decisions.md).
+원리와 엔지니어링 설명은 [기술백서](docs/whitepaper/README.md)에 있다.
 
 - **C++** (`core/`, `apps/`): 화소 처리, HDR 합성, 곡선, ISP, 코덱
 - **Python** (`python/cctvlog/`, `experiments/`): 파라미터 계산, 실험 관리, 분석
@@ -62,7 +63,7 @@ python/      cctvlog 패키지 (cli.run_cpp, runner, sensor, calib, ref, metrics
 experiments/ p0_ ~ p6_ 실험 스크립트 (config yaml만 인자)
 configs/     yaml + JSON 파라미터
 tests/       cpp/ (GoogleTest), py/ (pytest)
-docs/        pi_notes.md, decisions.md, fixed_point.md
+docs/        pi_notes.md, decisions.md, fixed_point.md, phase1_equipment.md, whitepaper/
 scripts/     pi.sh (PC → Pi SSH 원격 작업)
 data/ results/  (git 제외)
 ```

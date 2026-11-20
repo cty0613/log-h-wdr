@@ -57,6 +57,7 @@ mkdir -p data/pi_probe && scp -r <pi-host>:~/pi_probe data/pi_probe/20261120
 | `sample/000000.npy` / `.json` / `_isp.png` | 실제 RAW 샘플 1장 (C++ npy 로더 실데이터 확인용) |
 
 ### 0.4 이후 Phase를 위한 준비물 (지금 촬영하지 않음)
+> Phase 1 준비물의 구체적인 사양과 배치: [phase1_equipment.md](phase1_equipment.md)
 - 삼각대 또는 고정 마운트 (브래킷은 정지 장면 한정)
 - 균일 광원: 확산판(또는 흰 아크릴/종이) + 밝기 조절 가능한 LED. Phase 1 PTC에서 밝기 10단계, Phase 2 플랫필드 15단계 이상
 - 다크 프레임용 렌즈 캡 또는 완전 차광
