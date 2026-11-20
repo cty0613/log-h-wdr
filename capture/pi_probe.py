@@ -12,10 +12,14 @@ capture_raw.py·tuning_import.py를 만들기 전에, 추측 대신 실제 동�
   raw_formats     unpacked(비압축 16bit) RAW 요청 방법, MSB 정렬(LSB 0 패딩) 확인
   raw_main        한 request에서 raw + main 동시 획득, 샘플 프레임 저장
   exposure_delay  노출 변경 후 메타데이터에 반영되기까지의 프레임 수
+  controls        camera_controls (수동 노출·게인·초점 제어 이름과 범위)
+  manual_gain     요청 AnalogueGain {1,2,4,8,16}이 메타데이터에 그대로 반영되는지 (제어 방식별)
+  white_level     포화 화소의 RAW 값 (화면 일부에 밝은 광원이 들어오게 하고 실행)
   sensor_hdr      (--sensor-hdr) 센서 HDR 모드 전환과 그때의 sensor_modes
 
 사용법 (Pi에서):
   python3 pi_probe.py --out ~/pi_probe --sensor-hdr
+  python3 pi_probe.py --out ~/pi_probe2 --steps tuning_files,controls,manual_gain,white_level
 출력: <out>/pi_probe_report.json, <out>/tuning/*.json,
       <out>/sample/000000.{npy,json}, <out>/sample/000000_isp.png
 """
@@ -166,7 +170,7 @@ def step_sensor_modes(cam: int) -> list[dict[str, Any]]:
         return [dict(m) for m in picam2.sensor_modes]
 
 
-def step_tuning_files(out: Path) -> dict[str, Any]:
+def step_tuning_files(out: Path, model: str | None) -> dict[str, Any]:
     files = sorted({p for pat in TUNING_GLOBS for p in glob.glob(pat)})
     dst = out / "tuning"
     dst.mkdir(exist_ok=True)
@@ -212,13 +216,20 @@ def step_tuning_files(out: Path) -> dict[str, Any]:
         except Exception as e:
             info["parse_error"] = repr(e)
         summary["files"][f] = info
-    # Picamera2가 실제로 고르는 튜닝 파일
-    try:
-        from picamera2 import Picamera2
+    # libcamera는 센서 모델 이름(camera_properties["Model"])으로 튜닝 파일을 고른다
+    summary["camera_model"] = model
+    summary["expected_tuning_file"] = f"{model}.json" if model else None
+    pisp = [f for f in files if Path(f).parent.name == "pisp" and Path(f).stem == model]
+    summary["expected_tuning_path_pisp"] = pisp[0] if pisp else None
+    if model:
+        try:
+            from picamera2 import Picamera2
 
-        summary["picamera2_load_tuning_file_ok"] = bool(Picamera2.load_tuning_file("imx708.json"))
-    except Exception as e:
-        summary["picamera2_load_tuning_file_ok"] = repr(e)
+            summary["picamera2_load_tuning_file_ok"] = bool(
+                Picamera2.load_tuning_file(f"{model}.json")
+            )
+        except Exception as e:
+            summary["picamera2_load_tuning_file_ok"] = repr(e)
     return summary
 
 
@@ -412,6 +423,123 @@ def step_exposure_delay(cam: int, modes: list[dict[str, Any]], raw_fmt: str | No
     return {"trials": trials}
 
 
+def step_controls(cam: int) -> dict[str, Any]:
+    """camera_controls: 제어 이름 → (min, max, default). 수동 노출·게인·초점 제어 이름 확인용."""
+    from picamera2 import Picamera2
+
+    with Picamera2(cam) as picam2:
+        return {
+            k: list(v) if isinstance(v, tuple) else v for k, v in picam2.camera_controls.items()
+        }
+
+
+GAIN_KEYS = ("AnalogueGain", "DigitalGain", "ExposureTime", "ColourGains", "AeState", "Lux")
+
+
+def _settle_and_read(picam2, n_settle: int = 8, n_read: int = 3) -> list[dict[str, Any]]:
+    for _ in range(n_settle):
+        picam2.capture_metadata()
+    return [
+        {k: md.get(k) for k in GAIN_KEYS}
+        for md in (picam2.capture_metadata() for _ in range(n_read))
+    ]
+
+
+def step_manual_gain(cam: int, modes: list[dict[str, Any]], raw_fmt: str | None):
+    """요청한 AnalogueGain이 메타데이터에 그대로 나오는지, 제어 방식별로 확인한다.
+
+    1차 결과: AeEnable=False + AnalogueGain=1.0 요청 → 메타데이터 1.1228.
+    """
+    from picamera2 import Picamera2
+
+    mode = pick_mode(modes)
+    with Picamera2(cam) as picam2:
+        available = set(picam2.camera_controls)
+    variants: list[tuple[str, str, dict[str, Any]]] = [
+        ("ae_enable_false", "config", {"AeEnable": False, "AwbEnable": False}),
+        ("ae_enable_false", "set_controls", {"AeEnable": False, "AwbEnable": False}),
+    ]
+    if {"ExposureTimeMode", "AnalogueGainMode"} <= available:
+        manual_modes = {"ExposureTimeMode": 1, "AnalogueGainMode": 1, "AwbEnable": False}
+        variants.append(("mode_controls", "config", manual_modes))
+        variants.append(("mode_controls", "set_controls", manual_modes))
+    results = []
+    for gain in (1.0, 2.0, 4.0, 8.0, 16.0):
+        for vname, how, base in variants:
+            ctrl = {**base, "ExposureTime": 10000, "AnalogueGain": gain}
+            r: dict[str, Any] = {
+                "requested_gain": gain,
+                "variant": vname,
+                "apply": how,
+                "controls": ctrl,
+            }
+            try:
+                with Picamera2(cam) as picam2:
+                    _configure(picam2, mode, raw_fmt, ctrl if how == "config" else {})
+                    picam2.start()
+                    if how == "set_controls":
+                        picam2.set_controls(ctrl)
+                    r["readings"] = _settle_and_read(picam2)
+                    picam2.stop()
+                ag = r["readings"][-1]["AnalogueGain"]
+                r["gain_ratio_actual_over_requested"] = ag / gain if ag else None
+                r["ok"] = True
+            except Exception as e:
+                r["ok"] = False
+                r["error"] = repr(e)
+            results.append(r)
+    return {
+        "available_mode_controls": sorted(
+            available & {"AeEnable", "ExposureTimeMode", "AnalogueGainMode", "AwbEnable"}
+        ),
+        "results": results,
+    }
+
+
+def step_white_level(cam: int, modes: list[dict[str, Any]], raw_fmt: str | None):
+    """포화 화소의 RAW 값을 확인한다. 화면 일부에 밝은 광원이 들어오게 하고 실행한다."""
+    from picamera2 import Picamera2
+
+    mode = pick_mode(modes)
+    bd = mode["bit_depth"]
+    results = []
+    for exp_us, gain in ((20000, 4.0), (100000, 8.0), (400000, 16.0)):
+        ctrl = {**MANUAL, "ExposureTime": exp_us, "AnalogueGain": gain}
+        with Picamera2(cam) as picam2:
+            _configure(picam2, mode, raw_fmt, ctrl)
+            picam2.start()
+            for _ in range(6):
+                picam2.capture_metadata()
+            req = picam2.capture_request()
+            try:
+                arr = req.make_array("raw")
+                md = dict(req.get_metadata())
+            finally:
+                req.release()
+            picam2.stop()
+        if arr.dtype == np.uint8:
+            v = arr.view(np.uint16)[:, : mode["size"][0]]
+        else:
+            v = arr[:, : mode["size"][0]]
+        v = v >> (16 - bd)
+        vals, counts = np.unique(v, return_counts=True)
+        top = sorted(zip(vals.tolist(), counts.tolist(), strict=True))[-5:]
+        results.append(
+            {
+                "exposure_us_requested": exp_us,
+                "gain_requested": gain,
+                "ExposureTime": md.get("ExposureTime"),
+                "AnalogueGain": md.get("AnalogueGain"),
+                "max": int(v.max()),
+                "count_at_max": int((v == v.max()).sum()),
+                "fraction_at_max": float((v == v.max()).mean()),
+                "top5_values_counts": top,
+                "mean": float(v.mean()),
+            }
+        )
+    return {"bit_depth": bd, "results": results}
+
+
 def step_sensor_hdr(cam: int) -> dict[str, Any]:
     from picamera2 import Picamera2
     from picamera2.devices.imx708 import IMX708
@@ -431,19 +559,46 @@ def step_sensor_hdr(cam: int) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------------------------
+OPTIONAL_STEPS = (
+    "tuning_files",
+    "controls",
+    "raw_main",
+    "exposure_delay",
+    "manual_gain",
+    "white_level",
+)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--out", type=Path, default=Path("pi_probe_out"))
     ap.add_argument("--camera", type=int, default=0)
     ap.add_argument("--sensor-hdr", action="store_true", help="센서 HDR 모드 확인도 수행")
+    ap.add_argument(
+        "--steps",
+        default=",".join(OPTIONAL_STEPS),
+        help="실행할 선택 단계 (쉼표 구분). 기본: 전체. "
+        f"선택지: {','.join(OPTIONAL_STEPS)},sensor_hdr\n"
+        "versions·camera_info·sensor_modes·raw_formats는 항상 실행한다.",
+    )
     args = ap.parse_args()
+    steps = {s.strip() for s in args.steps.split(",") if s.strip()}
+    unknown = steps - set(OPTIONAL_STEPS) - {"sensor_hdr"}
+    if unknown:
+        ap.error(f"unknown steps: {sorted(unknown)}")
+    if args.sensor_hdr:
+        steps.add("sensor_hdr")
     args.out.mkdir(parents=True, exist_ok=True)
 
     rep = Report(args.out)
     rep.step("versions", step_versions)
-    rep.step("camera_info", step_camera_info, args.camera)
+    info = rep.step("camera_info", step_camera_info, args.camera)
+    model = (info or {}).get("camera_properties", {}).get("Model")
     modes = rep.step("sensor_modes", step_sensor_modes, args.camera)
-    rep.step("tuning_files", step_tuning_files, args.out)
+    if "tuning_files" in steps:
+        rep.step("tuning_files", step_tuning_files, args.out, model)
+    if "controls" in steps:
+        rep.step("controls", step_controls, args.camera)
 
     raw_fmt = None
     if modes:
@@ -455,9 +610,15 @@ def main() -> int:
                 raw_fmt = a["requested_format"]
                 break
         rep.data["selected_raw_format"] = raw_fmt
-        rep.step("raw_main", step_raw_main, args.camera, modes, raw_fmt, args.out)
-        rep.step("exposure_delay", step_exposure_delay, args.camera, modes, raw_fmt)
-    if args.sensor_hdr:
+        if "raw_main" in steps:
+            rep.step("raw_main", step_raw_main, args.camera, modes, raw_fmt, args.out)
+        if "exposure_delay" in steps:
+            rep.step("exposure_delay", step_exposure_delay, args.camera, modes, raw_fmt)
+        if "manual_gain" in steps:
+            rep.step("manual_gain", step_manual_gain, args.camera, modes, raw_fmt)
+        if "white_level" in steps:
+            rep.step("white_level", step_white_level, args.camera, modes, raw_fmt)
+    if "sensor_hdr" in steps:
         rep.step("sensor_hdr", step_sensor_hdr, args.camera)
 
     failed = [k for k, v in rep.data["steps"].items() if not v["ok"]]

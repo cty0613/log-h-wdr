@@ -58,3 +58,23 @@
 - `run_cpp` 키워드 인자 끝의 `_`는 떼고 플래그를 만든다(`in_=` → `--in`).
 
 **남은 일**: Pi 실데이터(`data/pi_probe/*/sample/000000.npy`)로도 같은 검증을 1회 수행한다.
+
+---
+
+## 2026-11-20 — Pi 1차 확인 결과에 따른 결정 (`data/pi_probe/20261120/`, 상세: `pi_notes.md`)
+
+**사실**
+- 카메라는 **Camera Module 3 Wide (`imx708_wide`)**, `Rotation = 180`.
+- 비압축 RAW: `raw={"format": "SRGGB10"}`로 요청하면 실제 포맷은 `SBGGR16`(stride 4608)이다. MSB 정렬이 확인되어 `>> 6`.
+- 실제 Bayer 순서는 `BGGR`로, `sensor_modes`의 `SRGGB`와 다르다.
+- 블랙 레벨은 16bit 스케일 4096 → 10bit 64.
+- 노출 변경은 5프레임 뒤에 반영되고, 실제 노출은 요청보다 −0.07% 작다.
+- 센서 HDR 모드는 2304×1296 @30fps 하나뿐이다.
+
+**결정**
+- 튜닝 값은 `pisp/imx708_wide.json`에서 가져온다(`tuning_import.py` 기본 입력). `imx708.json`은 CCM ct 개수와 값, ALSC luminance_lut 최대값(3.04 vs 4.72)이 달라서 쓰지 않는다.
+- `capture_raw.py`는 `raw={"format": mode["unpacked"]}`로 요청하고, Bayer 순서는 `camera_configuration()["raw"]["format"]`에서 읽어 프레임 JSON에 저장한다. 실제 포맷이 `*16`이 아니면 촬영을 중단한다(압축 포맷 방지).
+- 프레임 JSON의 `black_level`은 `SensorBlackLevels >> (16 − bit_depth)`로 계산해 기록한다(메타데이터에서 유도하는 값이므로 추정이 아님). `white_level`은 2차 확인 전까지 `null`.
+- 브래킷 촬영은 `set_controls` 후 최소 5프레임을 버린다. 그 뒤 프레임의 메타데이터 노출이 설정값과 2% 안에 들어오는지 확인한다.
+
+**보류**: 수동 게인 1.0 요청 → 메타데이터 1.1228. 원인을 확인하기 전까지 Phase 1 PTC 촬영 스크립트를 확정하지 않는다(2차 확인 `manual_gain`).
