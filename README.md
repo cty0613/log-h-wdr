@@ -1,7 +1,7 @@
-# CCTV-Log — HDR 합성 대응 Log 보관 스트림
+# 영상감시용 WDR(HDR) 대응 노이즈 매칭 Log 곡선 및 보관 스트림
 
 Raspberry Pi 5 + Camera Module 3 RAW에서 브래킷 HDR 합성/DCG 시뮬레이션으로 DR을 확보하고,
-합성 후 노이즈 분포에 맞춘 구간별 노이즈 매칭 Log 곡선(CCTV-Log)으로 10bit 보관 스트림을 만드는 실험 저장소.
+합성 후 노이즈 분포에 맞춘 구간별 노이즈 매칭 Log 곡선(**H-Log**)으로 10bit 보관 스트림을 만드는 실험 저장소.
 개발 명세는 [CLAUDE.md](CLAUDE.md), 결정 기록은 [docs/decisions.md](docs/decisions.md).
 
 - **C++** (`core/`, `apps/`): 화소 처리, HDR 합성, 곡선, ISP, 코덱

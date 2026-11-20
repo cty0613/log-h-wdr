@@ -1,4 +1,4 @@
-# CLAUDE.md — CCTV-Log: HDR 합성 대응 Log 보관 스트림
+# CLAUDE.md — H-Log: 영상감시용 WDR(HDR) 대응 노이즈 매칭 Log 곡선 및 보관 스트림
 
 이 파일은 Claude Code가 이 저장소에서 작업할 때 따르는 개발 명세다. 사람용 설명(배경 지식, 유스케이스, 페르소나)은 별도 기획 문서에 있다. 여기서는 **무엇을, 어떤 언어로, 어떤 순서로, 어떤 기준으로 만들지**만 정의한다.
 
@@ -11,12 +11,12 @@
 Raspberry Pi 5 + Camera Module 3에서 RAW를 얻고, 다음을 구현·검증한다.
 
 1. **DR 확보**: 노출 브래킷 합성(실측)과 DCG(시뮬레이션)로 DR을 넓히고, 각 방식의 **합성 후 노이즈 분포**를 모델링한다.
-2. **HDR 대응 CCTV-Log**: 합성 후 노이즈 분포에 맞춘 구간별 노이즈 매칭 Log 곡선을 설계하고 C++(float + 고정소수점 LUT)로 구현한다.
-3. **듀얼 파이프라인**: 같은 HDR 데이터에서 8bit 표시용 영상(직접 구현한 NR + Local 톤매핑)과 10bit CCTV-Log 보관용 영상을 만든다.
+2. **HDR 대응 H-Log**: 합성 후 노이즈 분포에 맞춘 구간별 노이즈 매칭 Log 곡선을 설계하고 C++(float + 고정소수점 LUT)로 구현한다.
+3. **듀얼 파이프라인**: 같은 HDR 데이터에서 8bit 표시용 영상(직접 구현한 NR + Local 톤매핑)과 10bit H-Log 보관용 영상을 만든다.
 4. **압축 강건성**: C++ 코덱(FFmpeg libav*, libx265)으로 압축한 뒤에도 보관 영상에서 하이라이트·섀도우를 복원할 수 있는지, 번호판 OCR로 이득을 확인한다.
 
 핵심 가설:
-- H1. 합성 후 노이즈 분포에 맞춘 CCTV-Log는 단일 노출 기준 곡선, S-Log3, HLG보다 같은 비트에서 양자화 손실이 작다.
+- H1. 합성 후 노이즈 분포에 맞춘 H-Log는 단일 노출 기준 곡선, S-Log3, HLG보다 같은 비트에서 양자화 손실이 작다.
 - H2. 확보한 DR에 따라 필요한 비트 수가 정량적으로 정해진다 (예: 브래킷 R=16에서 10bit 충분 여부).
 - H3. HEVC 압축(QP 22~37) 후에도 보관 영상의 복원 이득(복원 SNR, OCR 정확도)이 일정 QP까지 유지된다.
 
@@ -38,7 +38,7 @@ Raspberry Pi 5 + Camera Module 3에서 RAW를 얻고, 다음을 구현·검증�
 | 브래킷 HDR 합성, DCG 시뮬레이터 | C++ | `core/src/hdr/` |
 | ISP: BLC, LSC 적용, bilinear Demosaic, WB, CCM 적용 | C++ | `core/src/isp/` |
 | NR (guided filter), Local 톤매핑 (guided base/detail) | C++ + OpenMP | `core/src/isp/` |
-| 곡선: 구간별 노이즈 매칭 CCTV-Log, Rec.709, HLG, S-Log3 (float) + CCTV-Log 고정소수점 LUT | C++ | `core/src/curves/` |
+| 곡선: 구간별 노이즈 매칭 H-Log, Rec.709, HLG, S-Log3 (float) + H-Log 고정소수점 LUT | C++ | `core/src/curves/` |
 | 인코딩·디코딩, RGB↔YCbCr 변환 | C++ (libavcodec, libavformat, libx265) | `core/src/codec/` |
 | CLI 앱: hdr_merge, dcg_sim, process, encode, decode, restore, curve_eval | C++ | `apps/` |
 | 실험 격자 실행, 지표, 그래프, 리포트, OCR 평가 | Python | `python/cctvlog/`, `experiments/` |
@@ -54,7 +54,7 @@ Raspberry Pi 5 + Camera Module 3에서 RAW를 얻고, 다음을 구현·검증�
 | 블록 | 기준 | 허용 오차 |
 |---|---|---|
 | 곡선 4종 C++ float | Python 기준 모델 | 상대오차 ≤ 1e-5 |
-| CCTV-Log 고정소수점 LUT | C++ float 구현 | 10bit 코드 기준 최대 1 LSB |
+| H-Log 고정소수점 LUT | C++ float 구현 | 10bit 코드 기준 최대 1 LSB |
 | 브래킷 HDR 합성 C++ | Python 기준 모델 | 상대오차 ≤ 1e-5 |
 | DCG 시뮬레이터 C++ | 해석적 평균·분산 | 몬테카를로 신뢰구간 안 (예: 1e5 샘플, 분산 ±3%) |
 | 기타 블록 (Demosaic, NR, 톤매핑, CCM 등) | 해석적 입력 테스트 (상수, 램프, 체커보드) | 블록별 GoogleTest |
@@ -206,7 +206,7 @@ cctv-log/
 - 실측: 플랫필드 브래킷(밝기 단계 15개 이상)을 C++로 합성 → 프레임 쌍 차분으로 분산 측정 → 해석 모델과 비교 (구간별 오차 %).
 - SNR dip: 경계 직전·직후 SNR 차이(dB) 실측 vs 예측(샷 노이즈 지배 시 ≈ 10·log10 R).
 
-### 6.4 구간별 노이즈 매칭 CCTV-Log (`curves::PiecewiseNoiseMatched`)
+### 6.4 구간별 노이즈 매칭 H-Log (`curves::PiecewiseNoiseMatched`)
 - 입력: 5.4 노이즈 분포 JSON. 정의: C(x) = k·∫₀ˣ dt/σ(t), k = 1/∫₀^{x_max} dt/σ(t) (C(x_max) = 1).
 - 구간 i (x ∈ [x_i, x_{i+1})), a_i > 0: ∫ dt/√(a_i t + b_i) = (2/a_i)(√(a_i x + b_i) − √(a_i x_i + b_i)). a_i = 0이면 선형 (x − x_i)/√b_i.
 - C는 구간 경계에서 값 연속(도함수는 불연속 허용 — 노이즈 점프를 그대로 반영하는 것이 설계 의도).
@@ -244,18 +244,18 @@ cctv-log/
 
 수락 기준: C++ 합성 vs Python 기준 상대오차 ≤ 1e-5 / 실측 합성 분산이 해석 모델과 구간별 ±10% (못 맞추면 원인 분석 후 실측 분포를 곡선 입력으로 채택, `decisions.md`에 기록) / DCG 시뮬레이터 몬테카를로 테스트 통과.
 
-### Phase 3 — HDR 대응 CCTV-Log (1주, 핵심)
+### Phase 3 — HDR 대응 H-Log (1주, 핵심)
 - [Py] `curve_params.py`: 노이즈 분포 JSON → 곡선 JSON (k, 구간별 상수, x_max, N, 필요 비트).
 - [Py] `ref/curves.py`: 6.4의 곡선과 비교 곡선 기준 모델.
-- [C++] `curves`: PiecewiseNoiseMatched, Rec709, HLG, SLog3 float. CCTV-Log `FixedLut` (정방향 65536, 역방향 1024). `apps/curve_eval`: 램프 입력 → encode → quantize(bits) → decode → 결과 npy.
-- [Py] `experiments/p3_curves.py`: 곡선 6종(Rec.709, HLG, S-Log3, CCTV-Log 단일, CCTV-Log 브래킷 R=16, CCTV-Log DCG) × {8, 10, 12}bit의 R(x) 그래프, **DR(stop) 대비 필요 비트 그래프** (브래킷 R을 1~64로 바꿔가며).
+- [C++] `curves`: PiecewiseNoiseMatched, Rec709, HLG, SLog3 float. H-Log `FixedLut` (정방향 65536, 역방향 1024). `apps/curve_eval`: 램프 입력 → encode → quantize(bits) → decode → 결과 npy.
+- [Py] `experiments/p3_curves.py`: 곡선 6종(Rec.709, HLG, S-Log3, H-Log 단일, H-Log 브래킷 R=16, H-Log DCG) × {8, 10, 12}bit의 R(x) 그래프, **DR(stop) 대비 필요 비트 그래프** (브래킷 R을 1~64로 바꿔가며).
 
 수락 기준: C++ float vs Python 기준 ≤ 1e-5 / LUT vs float ≤ 1 LSB (오차 표 `docs/fixed_point.md`) / 왕복 오차, 단조성 테스트 통과 / `results/p3/conclusion.md`에 H1·H2에 대한 수치 결론.
 
 ### Phase 4 — 듀얼 파이프라인 (2주, C++)
 - [C++] 공통 앞단(합성된 HDR Bayer 입력): BLC(합성 전 수행됨, 여기선 확인만) → LSC(ALSC 격자 bilinear 보간 gain) → `demosaic_bilinear` → WB(colour_gains) → CCM(튜닝 파일, 색온도 선형 보간).
 - [C++] `DisplayPipeline`: `nr_guided`(강도 = 표시용) → `tonemap_local`(guided filter로 log 휘도 base/detail 분리, base 압축, detail 유지) → Rec.709 → 8bit.
-- [C++] `ArchivePipeline`: `nr_guided`(강도 = 보관용) → CCTV-Log LUT → 10bit + 사이드카.
+- [C++] `ArchivePipeline`: `nr_guided`(강도 = 보관용) → H-Log LUT → 10bit + 사이드카.
 - [C++] `apps/process`: 세션/브래킷 폴더 → 표시용 8bit 시퀀스 + 보관용 10bit 시퀀스(npy 또는 16bit PNG) + 사이드카. OpenMP, 블록별 처리 시간 `run.json`.
 - [Py] NR 강도 간이 스윕: 게인 2구간(낮음=1, 높음=16) × 강도 6단계, SNR·MTF50 → `configs/nr.json`(표시용·보관용 각 2값, 근거 수치 포함).
 
@@ -264,7 +264,7 @@ cctv-log/
 ### Phase 5 — C++ 코덱과 압축 실험 (2주)
 - [C++] `codec`: libavcodec+libx265 인코더(고정 QP, `yuv420p10le`/`yuv420p`), libavcodec 디코더. **RGB↔YCbCr 변환은 직접 구현**(BT.709 행렬, full range 명시, 4:2:0 다운샘플·업샘플 필터 명시). swscale 사용 금지. 인코더 전체 설정을 `run.json`에 기록.
 - [C++] `apps/encode`, `apps/decode`. 왕복 테스트(QP 0 근처 오차 한계).
-- [Py] `experiments/p5_compression.py`: 곡선 4종(HLG, S-Log3, CCTV-Log 단일, CCTV-Log 브래킷 R=16) × QP {22, 30, 37} × 장면 2개(10bit) + 대조군(8bit CCTV-Log 브래킷 × 같은 QP × 장면 2개). 지표: 비트레이트, 섀도우·미드·하이라이트 복원 SNR(선형 원본 대비), 밴딩.
+- [Py] `experiments/p5_compression.py`: 곡선 4종(HLG, S-Log3, H-Log 단일, H-Log 브래킷 R=16) × QP {22, 30, 37} × 장면 2개(10bit) + 대조군(8bit H-Log 브래킷 × 같은 QP × 장면 2개). 지표: 비트레이트, 섀도우·미드·하이라이트 복원 SNR(선형 원본 대비), 밴딩.
 - 막히면: Python FFmpeg CLI로 임시 진행 후 `decisions.md` 기록, C++ 경로로 최종 재생성.
 
 수락 기준: `results/p5/conclusion.md`에 H3 결론 한 줄과 근거 그래프 / 한 명령으로 재현.

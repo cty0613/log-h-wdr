@@ -1,4 +1,4 @@
-# 고정소수점 규칙 (CCTV-Log LUT)
+# 고정소수점 규칙 (H-Log LUT)
 
 Phase 3에서 채운다. `core/include/cctvlog/fixed.hpp`와 항상 일치해야 한다.
 

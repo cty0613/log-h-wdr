@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cctvlog"
 version = "0.1.0"
-description = "CCTV-Log: HDR 합성 대응 Log 보관 스트림 — 실험 관리·파라미터 계산·분석 (순수 Python)"
+description = "H-Log: 영상감시용 WDR(HDR) 대응 노이즈 매칭 Log 곡선 및 보관 스트림 — 실험 관리·파라미터 계산·분석 (순수 Python)"
 requires-python = ">=3.11"
 dependencies = [
   "numpy>=1.26",
