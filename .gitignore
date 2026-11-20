@@ -27,3 +27,6 @@ __pycache__/
 # Claude Code 로컬 설정
 .claude/settings.local.json
 build_configure.log
+
+# Pi 접속 설정 (scripts/pi.sh)
+.pi.env

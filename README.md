@@ -41,7 +41,18 @@ pip install -e ".[dev]" && pytest tests/py
 
 Python 테스트는 C++ CLI를 `CCTVLOG_BIN` 환경변수, 없으면 `build/release/apps`에서 찾는다.
 
-## 4. 저장소 구조
+## 4. Pi 원격 작업 (`scripts/pi.sh`)
+
+```bash
+cp .pi.env.example .pi.env        # PI_HOST(IP), PI_USER
+scripts/pi.sh setup               # 1회: SSH 키 생성·등록
+scripts/pi.sh agent               # 키에 passphrase가 있으면 WSL 시작 후 1회
+scripts/pi.sh check               # 연결·카메라 확인
+scripts/pi.sh probe [--steps ...] # Pi 환경 확인 → data/pi_probe/<시각>/
+scripts/pi.sh job NAME [--dest DIR] SCRIPT.py [ARGS]   # capture/ 동기화 → 실행 → 결과 회수
+```
+
+## 5. 저장소 구조
 
 ```
 core/        C++ 라이브러리 cctvlog_core (include/cctvlog, src/{io,hdr,isp,curves,codec})
@@ -52,6 +63,7 @@ experiments/ p0_ ~ p6_ 실험 스크립트 (config yaml만 인자)
 configs/     yaml + JSON 파라미터
 tests/       cpp/ (GoogleTest), py/ (pytest)
 docs/        pi_notes.md, decisions.md, fixed_point.md
+scripts/     pi.sh (PC → Pi SSH 원격 작업)
 data/ results/  (git 제외)
 ```
 

@@ -78,3 +78,65 @@
 - 브래킷 촬영은 `set_controls` 후 최소 5프레임을 버린다. 그 뒤 프레임의 메타데이터 노출이 설정값과 2% 안에 들어오는지 확인한다.
 
 **보류**: 수동 게인 1.0 요청 → 메타데이터 1.1228. 원인을 확인하기 전까지 Phase 1 PTC 촬영 스크립트를 확정하지 않는다(2차 확인 `manual_gain`).
+
+---
+
+## 2026-11-20 — Pi 원격 작업 자동화 (`scripts/pi.sh`)
+
+**결정**
+- PC(WSL)에서 SSH로 Pi에 접속해 `capture/` 동기화 → 실행 → `data/`로 회수하는 일을 Bash 스크립트 하나로 한다. 접속 정보는 `.pi.env`(git 제외)에 둔다.
+- 전송: 양쪽에 rsync가 있으면 rsync, 없으면 `tar | ssh`.
+- SSH ControlMaster를 10분 유지해서, 여러 번 호출해도 접속을 다시 맺지 않는다.
+- `job NAME`의 결과는 Pi의 `$PI_ROOT/runs/NAME` → PC의 `data/pi_runs/NAME`(또는 `--dest`)으로 간다. 같은 이름이 있으면 거부해 덮어쓰기를 막는다.
+- 회수한 폴더에 `pi_job.json`(스크립트, 인자, 시각, 종료 코드, git commit, capture/ 수정 여부)을 남긴다.
+- capture/ 스크립트는 모두 `--out DIR` 인자를 받는다(`job` 규약).
+
+**버린 대안**
+- Claude Code hook으로 capture/ 수정 때마다 자동 동기화: `run`/`job`이 실행 직전에 항상 동기화하므로 중복이다. 또 Pi가 꺼져 있으면 편집할 때마다 오류가 난다.
+- Python(paramiko/fabric): Pi와 PC 모두에 의존성이 늘어난다. ssh/rsync만으로 충분하다.
+
+**검증**: 가짜 ssh shim(명령을 임시 원격 홈에서 실행)으로 확인했다. sync/run/job/probe/fetch, rsync와 tar 경로, 인자 인용(공백 포함), 잘못된 스크립트·작업 이름 거부, 중복 결과 거부. 실제 Pi 접속은 아직 하지 않았다.
+
+---
+
+## 2026-11-20 — Pi 2차 확인 결과에 따른 결정 (`data/pi_probe/20261120_2/`)
+
+**사실**
+- 수동 게인 2, 4, 8, 16은 요청값 그대로 적용된다. 1.0은 1.1228070259로 하한에 걸린다. 이 값은 `1024/(1024−112)`의 float32 값과 정확히 같다(센서 최소 게인 code 112로 판단, v4l2 확인 대기).
+- `AeEnable=False`와 `ExposureTimeMode/AnalogueGainMode=Manual`의 결과는 같고, config와 `set_controls` 적용도 차이가 없다.
+- 화이트 레벨은 10bit 1023이다. 포화는 1023에서 깨끗하게 잘린다.
+- 튜닝 파일 `pisp/imx708_wide.json` 로드를 확인했다.
+
+**결정**
+- **Phase 1 PTC의 "게인 1"은 센서 최소 게인 1.1228로 촬영한다.** 게인 집합은 {1.1228(최소), 4, 16}. 1.0은 물리적으로 설정할 수 없다. 노이즈 모델 JSON과 리포트에는 메타데이터의 실제 게인을 쓰고, "gain 1"이라는 이름 대신 실제 값으로 표기한다.
+  - 버린 대안: 디지털 게인으로 1.0 맞추기. RAW는 ISP 전 단계라 해당하지 않고, 맞춘다 해도 노이즈 특성은 그대로다.
+- 수동 제어는 `ExposureTimeMode=1, AnalogueGainMode=1, AwbEnable=False`로 지정한다(libcamera 0.5+ 방식). `AeEnable`에 의존하지 않는다.
+- `AfMode=0`(Manual)과 `LensPosition`을 고정하고 프레임 JSON `notes`에 기록한다. `HdrMode`(ISP HDR)는 항상 0으로 둔다.
+- 프레임 JSON `white_level = 1023`(10bit 모드). 모드의 `bit_depth`에서 `2^bit_depth − 1`로 쓴다. 포화가 1023에서 잘리는 것을 실측했으므로 추정이 아니다.
+- 정규화 분모는 `white − black = 959`(5.3절).
+
+---
+
+## 2026-11-20 — Phase 0 완료: 수락 기준 결과
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| 브래킷 실제 노출비가 설정값과 2% 이내 | **PASS** — 최대 1.082% | `data/raw/20261120_desk_bracket/` 16/4/1 ms × 5세트. 실제 15979/3981/988 µs → R = 4.0138, 16.1731. 재촬영 0회 |
+| C++ npy 로더와 Python 로더 비트 동일 | **PASS** | `tests/py/test_npy_crosscheck.py` 15케이스 + Pi 실 RAW 샘플 |
+| `ctest`, `pytest` 통과 | **PASS** | ctest 12/12, pytest 33/33, 컴파일 경고 0 |
+| `pi_notes.md`에 명령·모드·튜닝 파일 위치 | **PASS** | pi_notes 0~9절 |
+
+**산출물**
+- `capture/capture_raw.py`(single/bracket/sensor_hdr), `capture/rawutil.py`(PC 테스트 가능한 순수 로직)
+- `python/cctvlog/calib/tuning_import.py` → `configs/tuning_ccm.json`, `configs/tuning_alsc.json`(입력은 `pisp/imx708_wide.json`, sha256 기록)
+
+**결정**
+- ALSC/CCM 해석은 raspberrypi/libcamera `main` 소스(2026-11-20 읽음)를 따른다.
+  - 격자 32×32, 행 우선. 보정 이득 = cal/min(cal)·L′, ct는 K 단위 선형 보간 후 범위 밖 고정.
+  - CCM은 행 우선, out = M·RGB.
+- 튜닝 테이블은 센서 원래 방향이다. 현재 RAW는 센서 h+v flip 상태이므로 **Phase 4 LSC는 프레임 JSON의 `sensor_flip`에 따라 테이블을 뒤집어 적용한다.**
+- `luminance_strength`는 튜닝 값이 0.65다(Pi ISP는 감광을 65%만 보정). 보관용 선형 경로에 1.0(완전 보정)을 쓸지는 Phase 4에서 정하고, 지금은 JSON에 원래 값을 그대로 둔다.
+
+**관찰 (Phase 1·2에서 다시 확인)**
+- 화소값으로 구한 노출비가 메타데이터 노출비보다 0.4~0.6% 크다(4.037 vs 4.014, 16.24 vs 16.17; 긴 노출 100~850 DN 화소의 중앙값). 블랙 레벨 오차, 비선형성, 비율 중앙값의 편향을 후보로 본다. Phase 1 다크 프레임·PTC에서 블랙 레벨과 선형성을 측정한 뒤 판단한다. 합성은 계속 메타데이터의 실제 노출비를 쓴다.
+- 짧은 노출의 양자화 오차가 커서(1 ms에서 −1.2%), R이 큰 브래킷은 짧은 노출이 1 ms보다 짧아지지 않게 구성한다(예: R = 16이면 긴 노출 ≥ 16 ms).
