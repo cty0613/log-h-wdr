@@ -1,0 +1,19 @@
+# Phase 1 센서 HDR 모드 특성 (experiments/p1_sensor_hdr.py)
+name: p1_sensor_hdr
+runs:   # 같은 광원에서 게인별 스윕. 유효 노출 E = (게인 / 최소 게인)·노출
+  - data/pi_runs/sensor_hdr_g1_20261121_2115
+  - data/pi_runs/sensor_hdr_g16_20261121_2117
+# 블랙 레벨: HDR 모드 다크는 찍지 않았다. 메타데이터 SensorBlackLevels = 4096(16bit) = 64(10bit),
+# 일반 모드 다크 실측 63.96(최소 게인)과 같다. 선형 구간 피팅의 절편으로 검증한다.
+black_dn: 64.0
+full_scale_dn: 959.0
+# 일반 모드 최소 게인 초록 포화 노출 (Phase 1 PTC plan.json t_sat, 같은 광원·셋업)
+normal_plan: data/pi_runs/ptc_flat_20261121_2044/plan.json
+normal_noise_model: configs/noise_single_g1.json
+hdr:
+  roi: 256
+  channel: G1
+  linear_tol: 0.05   # 짧은 노출의 메타데이터 노출 오차(±3~6%)보다 크게
+  sat_level: 0.99
+  max_segments: 7
+summary_copy: results/p1/sensor_hdr_summary.md

@@ -1,0 +1,14 @@
+# Phase 1 PTC 분석 (experiments/p1_ptc.py)
+name: p1
+flat_dir: data/pi_runs/ptc_flat_20261121_2044
+dark_dir: data/pi_runs/ptc_dark_20261121_2052
+ptc:
+  roi: 256            # 센서 화소, 중앙 (플랫필드 판정: 이 크기에서 블록 편차 약 7%)
+  max_level: 0.9      # 포화 직전 제외
+  flicker_flag: 0.01  # 행 평균 제거 전후 분산 차이가 다크보다 1% 이상 크면 제외
+  low_level: 0.15
+  high_level: 0.5
+model_method: fixed_b # fixed_b (b = 다크 판독 노이즈) | free — docs/decisions.md 2026-11-21
+noise_model_out: configs/noise_single_{label}.json
+summary_copy: results/p1/sensor_summary.md
+acceptance_r2: 0.99

@@ -53,7 +53,30 @@ scripts/pi.sh probe [--steps ...] # Pi 환경 확인 → data/pi_probe/<시각>/
 scripts/pi.sh job NAME [--dest DIR] SCRIPT.py [ARGS]   # capture/ 동기화 → 실행 → 결과 회수
 ```
 
-## 5. 저장소 구조
+## 5. Phase 1: 센서 특성화 (촬영 → 분석)
+
+준비물과 배치는 [docs/phase1_equipment.md](docs/phase1_equipment.md)에 있다. 결과와 결정은 [docs/decisions.md](docs/decisions.md) 2026-11-21 항목에 있다.
+
+```bash
+# 1) 셋업 확인 (약 30초): 깜빡임·밝기·안정성·균일도 판정
+scripts/pi.sh job ffcheck_YYYYMMDD_HHMM check_flatfield.py
+python -m cctvlog.sensor.flatfield_check data/pi_runs/ffcheck_YYYYMMDD_HHMM
+
+# 2) PTC 촬영: flat(광원 켬) → dark(렌즈 완전히 가림)
+scripts/pi.sh job ptc_flat_YYYYMMDD_HHMM capture_ptc.py --part flat --notes "광원: ..."
+scripts/pi.sh job ptc_dark_YYYYMMDD_HHMM capture_ptc.py --part dark \
+    --plan ../runs/ptc_flat_YYYYMMDD_HHMM/plan.json
+
+# 3) 센서 HDR 모드 스윕 (같은 셋업, 게인 2개로 포화까지)
+scripts/pi.sh job sensor_hdr_g1_YYYYMMDD_HHMM capture_sensor_hdr.py --part flat --gain 1.1228 --sweep 858,1000000,36
+scripts/pi.sh job sensor_hdr_g16_YYYYMMDD_HHMM capture_sensor_hdr.py --part flat --gain 16 --sweep 858,400000,30
+
+# 4) 분석 (config에 데이터 폴더 지정)
+python experiments/p1_ptc.py configs/p1_ptc.yaml               # → configs/noise_single_{g1,g4,g16}.json, results/p1/sensor_summary.md
+python experiments/p1_sensor_hdr.py configs/p1_sensor_hdr.yaml # → results/p1/sensor_hdr_summary.md
+```
+
+## 6. 저장소 구조
 
 ```
 core/        C++ 라이브러리 cctvlog_core (include/cctvlog, src/{io,hdr,isp,curves,codec})

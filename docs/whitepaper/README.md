@@ -32,8 +32,8 @@
 | 장 | 제목 | 관련 Phase | 상태 |
 |---|---|---|---|
 | [1](01_overview.md) | 문제 정의와 프로젝트 전체 그림 | 전체 | 작성 |
-| [2](02_light_and_sensor.md) | 빛, 센서, RAW — 카메라는 무엇을 재는가 | 0, 1 | 작성 (Phase 0 실측 반영) |
-| [3](03_noise_and_ptc.md) | 노이즈의 과학과 PTC 측정 | 1 | 원리 작성, 실측 대기 |
+| [2](02_light_and_sensor.md) | 빛, 센서, RAW — 카메라는 무엇을 재는가 | 0, 1 | 작성 (Phase 0·1 실측 반영) |
+| [3](03_noise_and_ptc.md) | 노이즈의 과학과 PTC 측정 | 1 | 작성 (Phase 1 실측 반영) |
 | [4](04_dynamic_range.md) | DR 확보: 브래킷 합성과 DCG | 2 | 원리 작성, 실측 대기 |
 | [5](05_hlog_curve.md) | 전달 곡선과 H-Log 설계 | 3 | 원리 작성, 결과 대기 |
 | [6](06_isp_pipeline.md) | ISP와 듀얼 파이프라인 | 4 | 원리 작성 |

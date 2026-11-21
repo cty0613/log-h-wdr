@@ -30,3 +30,5 @@ src = ["python", "tests/py", "experiments", "capture"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "NPY", "RUF"]
+# 수식 표기용 기호 (문서·그래프 라벨)
+allowed-confusables = ["−", "×", "σ"]
