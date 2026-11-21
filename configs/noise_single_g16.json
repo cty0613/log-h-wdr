@@ -1,0 +1,48 @@
+{
+  "kind": "single",
+  "scale": "normalized_long_exposure",
+  "x_max": 1.0,
+  "segments": [
+    {
+      "x_start": 0.0,
+      "a": 0.0008036923598308664,
+      "b": 3.1530236482772012e-06
+    }
+  ],
+  "assumptions": {
+    "analogue_gain": 16.0,
+    "method": "fixed_b",
+    "full_scale_dn": 959.0,
+    "K_dn_per_e": 0.7707409730778009,
+    "b_dn2": 2.8997759418712246,
+    "r2": 0.9977228172175535,
+    "read_noise_e": 2.2093970725210705,
+    "saturation_e": 1244.2571933997801,
+    "dr_stops": 9.13741628938754,
+    "curvature_K_high_over_low": 0.9920975684431153,
+    "alternative": {
+      "method": "free",
+      "a": 0.0008039152257899106,
+      "b": 3.112687735362387e-06
+    },
+    "channels": "B,G1,G2,R joint fit",
+    "per_channel_K_dn_per_e": {
+      "B": 0.7282975546251353,
+      "G1": 0.7905589822190809,
+      "G2": 0.7791174820174159,
+      "R": 0.7916725202847267
+    },
+    "source": {
+      "flat_dir": "data/pi_runs/ptc_flat_20261121_2044",
+      "dark_dir": "data/pi_runs/ptc_dark_20261121_2052",
+      "flat_ptc_json_sha256": "0e4dec84b93a8e65760fb694d4bfd484c1e008e61778818e62dd4af0081dc1ec",
+      "dark_ptc_json_sha256": "079c632daf3efd825ee1153edd4e2c82aaf6318933b8b6d6e0b45bf99d499c9b",
+      "analysis": "experiments/p1_ptc.py",
+      "results_dir": "results/p1/20261121_212525",
+      "git": {
+        "commit": "cb690fde46142d97971ececb01ed0685e5a49a09",
+        "dirty": false
+      }
+    }
+  }
+}
