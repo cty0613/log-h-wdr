@@ -5,6 +5,9 @@ add_executable(cctvlog_tests
   test_image.cpp
   test_npy.cpp
   test_codec_env.cpp
+  test_random.cpp
+  test_bracket_merge.cpp
+  test_dcg.cpp
 )
 target_link_libraries(cctvlog_tests PRIVATE
   cctvlog::core cctvlog_warnings GTest::gtest GTest::gtest_main)

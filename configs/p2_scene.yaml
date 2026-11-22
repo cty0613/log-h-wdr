@@ -1,0 +1,11 @@
+# Phase 2 실제 장면 합성 데모 (experiments/p2_scene.py)
+name: p2_scene
+bracket_dir: data/raw/20261120_desk_bracket/bracket_0000   # Phase 0, 16/4/1 ms (실제 15979/3981/988 µs)
+merge_config: configs/hdr_merge.json
+variants:
+  - {name: R4, frames: [0, 1]}
+  - {name: R16, frames: [0, 1, 2]}
+  - {name: R16_2f, frames: [0, 2]}
+dcg:
+  config: configs/dcg_assumptions.json
+  input_variant: R16       # 브래킷 합성 결과를 "참값 장면"으로 사용 (CLAUDE.md 6.2)

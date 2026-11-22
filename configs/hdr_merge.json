@@ -1,0 +1,5 @@
+{
+  "_comment": "hdr::bracket_merge 파라미터 (CLAUDE.md 6.1). 경계 띠 [band_ratio*tau, tau]",
+  "tau": 0.9,
+  "band_ratio": 0.8
+}

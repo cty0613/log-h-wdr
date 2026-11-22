@@ -7,6 +7,7 @@ function(cctvlog_add_app name)
   target_link_libraries(${name} PRIVATE cctvlog::core cctvlog_warnings)
 endfunction()
 
-# Phase 0: curve_eval 뼈대. 나머지(hdr_merge, dcg_sim, process, encode, decode, restore)는
-# 해당 Phase에서 main.cpp를 추가하면서 여기에 등록한다.
-cctvlog_add_app(curve_eval)
+# 나머지(process, encode, decode, restore)는 해당 Phase에서 main.cpp를 추가하면서 등록한다.
+cctvlog_add_app(curve_eval)  # Phase 0 뼈대, Phase 3에서 구현
+cctvlog_add_app(hdr_merge)   # Phase 2
+cctvlog_add_app(dcg_sim)     # Phase 2

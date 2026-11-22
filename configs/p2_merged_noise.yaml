@@ -1,0 +1,19 @@
+# Phase 2 합성 후 노이즈 실측 (experiments/p2_merged_noise.py)
+name: p2_merged_noise
+sweep_dir: data/pi_runs/bracket_flat_20261122_2205   # capture_bracket_ptc.py 결과
+single_noise: configs/noise_single_g1.json
+merge_config: configs/hdr_merge.json
+variants:   # frames = bracket.json files 번호 (16/4/1 ms 순서)
+  - {name: R4, frames: [0, 1], ratios: [1, 4], model: configs/noise_bracket_R4.json}
+  - {name: R16, frames: [0, 1, 2], ratios: [1, 4, 16], model: configs/noise_bracket_R16.json}
+  - {name: R16_2f, frames: [0, 2], ratios: [1, 16], model: configs/noise_bracket_R16_2f.json}
+measure:
+  roi: 512
+  box: 9
+  bins_per_stop: 16
+  min_pixels: 2000
+  edge_margin: 0.03
+  flicker_flag: 0.01
+  dark_rowdet_excess: 0.0037   # Phase 1 g1 다크 (results/p1/20261121_212525/report.json)
+  tolerance: 0.10              # 수락 기준: 구간별 ±10%
+summary_copy: results/p2/merged_noise_summary.md

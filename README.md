@@ -76,7 +76,31 @@ python experiments/p1_ptc.py configs/p1_ptc.yaml               # → configs/noi
 python experiments/p1_sensor_hdr.py configs/p1_sensor_hdr.yaml # → results/p1/sensor_hdr_summary.md
 ```
 
-## 6. 저장소 구조
+## 6. Phase 2: DR 확보 (브래킷 합성, DCG, 합성 후 노이즈)
+
+결정과 결과는 [docs/decisions.md](docs/decisions.md) 2026-11-22 항목에 있다. 셋업은 Phase 1과 같다(라이트박스, 암실, 예열).
+
+```bash
+# 1) 해석 노이즈 모델 + DCG 몬테카를로 + SNR 그래프 (촬영 불필요)
+python experiments/p2_models.py configs/p2_models.yaml
+#    → configs/noise_bracket_{R4,R16,R16_2f}.json, configs/noise_dcg.json, results/p2_models/
+
+# 2) 플랫필드 브래킷 스윕 촬영 (16:4:1, 24단계 × 2세트, 약 1.5분)
+scripts/pi.sh job bracket_flat_YYYYMMDD_HHMM capture_bracket_ptc.py --notes "..."
+#    계획만 확인: ... capture_bracket_ptc.py --probe-only
+
+# 3) 실측 vs 해석 모델 (configs/p2_merged_noise.yaml의 sweep_dir 지정) — 수락 기준 ±10%
+python experiments/p2_merged_noise.py configs/p2_merged_noise.yaml   # → results/p2/merged_noise_summary.md
+
+# 4) 실제 장면 합성 + DCG 데모, C++ vs Python 기준 모델 확인
+python experiments/p2_scene.py configs/p2_scene.yaml
+
+# C++ CLI 단독 사용
+build/release/apps/hdr_merge --config configs/hdr_merge.json --in <bracket_dir> --out <dir> [--frames 0,2]
+build/release/apps/dcg_sim --config configs/dcg_assumptions.json --in <merged.npy> --out <dir>
+```
+
+## 7. 저장소 구조
 
 ```
 core/        C++ 라이브러리 cctvlog_core (include/cctvlog, src/{io,hdr,isp,curves,codec})

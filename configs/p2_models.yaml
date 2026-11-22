@@ -1,0 +1,22 @@
+# Phase 2 해석 노이즈 모델 + DCG 시뮬레이션 (experiments/p2_models.py)
+name: p2_models
+single_noise: configs/noise_single_g1.json   # 브래킷은 최소 게인(g1)에서 촬영
+tau: 0.9
+band_ratio: 0.8
+brackets:   # 노출비는 공칭값 (실제 16/4/1 ms 촬영은 4.014, 16.17 — decisions.md 2026-11-22)
+  - {name: R4, label: "bracket R=4 (16:4 ms)", ratios: [1, 4], out: configs/noise_bracket_R4.json}
+  - {name: R16, label: "bracket R=16, 3 frames (16:4:1)", ratios: [1, 4, 16], out: configs/noise_bracket_R16.json}
+  - {name: R16_2f, label: "bracket R=16, 2 frames (16:1)", ratios: [1, 16], out: configs/noise_bracket_R16_2f.json}
+dcg:
+  config: configs/dcg_assumptions.json
+  out: configs/noise_dcg.json
+  sensitivity_ratios: [2, 4, 8]
+  option_a_scene_scale_e_per_unit: 17666   # 참고선: x = 1에서 LCG 포화 (긴 노출과 같은 노출)
+  mc:   # dcg_sim으로 상수 밝기 블록을 시뮬레이션해 해석 분산과 비교
+    levels: 48
+    x_min: 0.002
+    x_max: 15.5
+    width: 2000
+    rows_per_level: 5    # 레벨당 1만 샘플 → 분산 표준오차 약 1.4%
+    seed: 20261122
+sensor_hdr_report: results/p1_sensor_hdr/20261121_212533/report.json   # 비교군 (입력 기준 SNR)

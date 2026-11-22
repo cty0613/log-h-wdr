@@ -1,0 +1,47 @@
+{
+  "kind": "dcg",
+  "scale": "normalized_long_exposure",
+  "x_max": 16.0,
+  "segments": [
+    {
+      "x_start": 0.0,
+      "a": 0.000905694554511491,
+      "b": 6.535612367009254e-06
+    },
+    {
+      "x_start": 3.6,
+      "a": 0.000905694554511491,
+      "b": 0.00010456979787214807
+    }
+  ],
+  "assumptions": {
+    "conversion_gain_ratio": 4,
+    "lcg_full_well_e": 17666,
+    "lcg_read_noise_e": 9.96,
+    "hcg_full_well_e": 4416.5,
+    "hcg_read_noise_e": 2.49,
+    "scene_scale_e_per_unit": 1104.125,
+    "adc_bits": 10,
+    "black_level_dn": 64,
+    "tau": 0.9,
+    "band_ratio": 0.8,
+    "seed": 20261122,
+    "adc_full_scale_dn": 959.0,
+    "hcg_e_per_dn": 4.605318039624609,
+    "lcg_e_per_dn": 18.421272158498436,
+    "band_model": "jump_at_tau (exact: merged_noise.dcg_band_variance)",
+    "shot_noise": "shared between HCG and LCG readouts",
+    "source": {
+      "single_noise": "configs/noise_single_g1.json",
+      "single_noise_sha256": "3b2cb570e9915caeda44e528154fb0cc2032123ae805952434ce791aa9633c9b",
+      "generator": "experiments/p2_models.py",
+      "results_dir": "results/p2_models/20261122_151410",
+      "git": {
+        "commit": "10a4ddaf2e67ae1bb788f708cfce405ae2f0d349",
+        "dirty": true
+      },
+      "dcg_assumptions": "configs/dcg_assumptions.json",
+      "dcg_assumptions_sha256": "17b45e45bb19d4c7499ec4ea909a95127043096026a97bd88fd23603b9846694"
+    }
+  }
+}

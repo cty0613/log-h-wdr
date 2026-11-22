@@ -3,6 +3,8 @@ add_library(cctvlog_core
   src/io/json_io.cpp
   src/io/run_info.cpp
   src/codec/ffmpeg_info.cpp
+  src/hdr/bracket_merge.cpp
+  src/hdr/dcg_simulate.cpp
   ${CCTVLOG_GIT_INFO_CPP}
 )
 add_library(cctvlog::core ALIAS cctvlog_core)

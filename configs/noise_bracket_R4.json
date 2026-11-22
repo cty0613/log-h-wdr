@@ -1,0 +1,42 @@
+{
+  "kind": "bracket",
+  "scale": "normalized_long_exposure",
+  "x_max": 4.0,
+  "segments": [
+    {
+      "x_start": 0.0,
+      "a": 5.660737407263459e-05,
+      "b": 4.0833976754083865e-07
+    },
+    {
+      "x_start": 0.9,
+      "a": 0.00022642949629053837,
+      "b": 6.5334362806534185e-06
+    }
+  ],
+  "assumptions": {
+    "exposure_ratios": [
+      1.0,
+      4.0
+    ],
+    "tau": 0.9,
+    "band_ratio": 0.8,
+    "band_model": "jump_at_tau (band [band_ratio*tau, tau] ignored; exact: merged_noise.band_variance)",
+    "single": {
+      "a": 5.660737407263459e-05,
+      "b": 4.0833976754083865e-07,
+      "analogue_gain": 1.1228070259094238
+    },
+    "name": "R4",
+    "source": {
+      "single_noise": "configs/noise_single_g1.json",
+      "single_noise_sha256": "3b2cb570e9915caeda44e528154fb0cc2032123ae805952434ce791aa9633c9b",
+      "generator": "experiments/p2_models.py",
+      "results_dir": "results/p2_models/20261122_151410",
+      "git": {
+        "commit": "10a4ddaf2e67ae1bb788f708cfce405ae2f0d349",
+        "dirty": true
+      }
+    }
+  }
+}

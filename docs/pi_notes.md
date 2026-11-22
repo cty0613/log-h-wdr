@@ -202,3 +202,4 @@ scripts/pi.sh job <name> --dest data/raw/<YYYYMMDD>_<scene>_<mode> capture_raw.p
   - 1초 노출도 적용된다(999,974 µs). `exposure_limits`는 6 ~ 56,238,031 µs로 보고된다.
   - 수동 아날로그 게인(1.1228, 16)이 그대로 적용된다. 메타데이터 `SensorBlackLevels`는 4096(16bit 기준) = 64(10bit)다.
 - `sensor_flip`은 촬영 때 v4l2에서 읽어 session과 각 프레임 JSON에 기록한다. 현재 h = v = True.
+- **일반 모드 긴 노출 (2026-11-22, `capture/capture_bracket_ptc.py`)**: still 구성에서 701,434 µs 노출이 적용된다(요청 700,632 µs). 0.7 s 노출 브래킷 세트도 노출 변경 지연 규칙(메타데이터 일치 프레임만 저장) 그대로 동작했다. 24단계 × 2세트 × 3노출 스윕이 91초 걸렸다.

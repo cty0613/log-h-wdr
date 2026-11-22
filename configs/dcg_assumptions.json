@@ -1,0 +1,16 @@
+{
+  "_comment": "DCG 시뮬레이터 가정값. 근거: docs/decisions.md 2026-11-22 결정 3. hcg_* 가 null이면 LCG / conversion_gain_ratio (이상적 규칙, 낙관적 가정)",
+  "_source": "LCG = Phase 1 g1 실측 (configs/noise_single_g1.json): 포화 17,666 e-, 판독 노이즈 11.29 e- 에서 ADC 양자화 18.42/sqrt(12) e- 를 뺀 9.96 e-",
+  "conversion_gain_ratio": 4,
+  "lcg_full_well_e": 17666,
+  "lcg_read_noise_e": 9.96,
+  "hcg_full_well_e": null,
+  "hcg_read_noise_e": null,
+  "_scene_scale": "옵션 B: x = 16 (R=16 브래킷 하이라이트 범위)에서 LCG 포화 → 17666 / 16",
+  "scene_scale_e_per_unit": 1104.125,
+  "adc_bits": 10,
+  "black_level_dn": 64,
+  "tau": 0.9,
+  "band_ratio": 0.8,
+  "seed": 20261122
+}
