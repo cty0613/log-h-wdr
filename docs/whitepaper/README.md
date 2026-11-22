@@ -14,6 +14,7 @@
 Phase별 결과 보고서는 [docs/reports/](../reports/)에 있다. 보고서는 백서의 각 주장을 측정 결과와 대조해 확인·보정·미해결로 판정한다.
 - [Phase 0·1 결과 보고서](../reports/phase1_report.html): 촬영 체계, PTC와 노이즈 모델, 센서 HDR 모드, Phase 2·3 예비 계산
 - [Phase 2 결과 보고서](../reports/phase2_report.html): 브래킷 합성과 DCG, 합성 후 노이즈 해석 모델과 플랫필드 실측, 노출비 편차와 경계 띠 해석
+- [Phase 3 결과 보고서](../reports/phase3_report.html): H-Log 곡선과 구현, 비교 규칙, H1(곡선별 R(x)), H2(DR 대비 필요 비트), 고정소수점 LUT 오차
 
 ---
 
