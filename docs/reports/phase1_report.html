@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>H-Log Phase 0·1 결과 보고서</title>
+<meta name="description" content="Raspberry Pi 5 + IMX708에서 수행한 Phase 0(촬영 체계)과 Phase 1(센서 특성화, 노이즈 모델, 센서 HDR 모드)의 실험·측정·설계 결과와 기술백서 대조">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4;
+  --surface-1: #fcfcfb;
+  --surface-2: #f0efec;
+  --border: #e2e1dc;
+  --grid: #e6e5e0;
+  --axis: #b9b8b1;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #77766f;
+  --link: #1c5cab;
+  --accent: #2a78d6;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --neutral-mark: #a3a29b;
+  --ref-line: #8a8981;
+  --band: rgba(42, 120, 214, 0.08);
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --good-text: #006300;
+  --warning-text: #7a5300;
+  --serious-text: #9a3f17;
+  --code-bg: #efeee9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211;
+    --surface-1: #1a1a19;
+    --surface-2: #232321;
+    --border: #33332f;
+    --grid: #2c2c29;
+    --axis: #55544e;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #96958c;
+    --link: #86b6ef;
+    --accent: #3987e5;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --neutral-mark: #6f6e67;
+    --ref-line: #8f8e86;
+    --band: rgba(57, 135, 229, 0.12);
+    --good-text: #4cc94c;
+    --warning-text: #fab219;
+    --serious-text: #ec835a;
+    --code-bg: #262624;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211;
+  --surface-1: #1a1a19;
+  --surface-2: #232321;
+  --border: #33332f;
+  --grid: #2c2c29;
+  --axis: #55544e;
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --text-muted: #96958c;
+  --link: #86b6ef;
+  --accent: #3987e5;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --neutral-mark: #6f6e67;
+  --ref-line: #8f8e86;
+  --band: rgba(57, 135, 229, 0.12);
+  --good-text: #4cc94c;
+  --warning-text: #fab219;
+  --serious-text: #ec835a;
+  --code-bg: #262624;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.page { max-width: 1040px; margin: 0 auto; padding: 40px 16px 80px; }
+header.top { margin-bottom: 32px; }
+.eyebrow { font-size: 13px; color: var(--text-muted); letter-spacing: 0.02em; margin: 0 0 6px; }
+h1 { font-size: 30px; line-height: 1.3; margin: 0 0 10px; letter-spacing: -0.01em; }
+h2 { font-size: 22px; line-height: 1.35; margin: 56px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 17px; margin: 28px 0 8px; }
+p { margin: 0 0 12px; }
+.lede { color: var(--text-secondary); font-size: 17px; max-width: 760px; }
+.meta { font-size: 13px; color: var(--text-muted); margin-top: 12px; }
+a { color: var(--link); text-underline-offset: 2px; }
+code { font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace; font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre { font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace; font-size: 13px; background: var(--code-bg); padding: 12px 14px; border-radius: 8px; overflow-x: auto; line-height: 1.5; margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-left: 22px; }
+li { margin: 3px 0; }
+.muted { color: var(--text-muted); }
+.small { font-size: 14px; }
+
+nav.toc { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin: 24px 0 0; }
+nav.toc ol { margin: 0; columns: 2; column-gap: 28px; font-size: 15px; }
+@media (max-width: 640px) { nav.toc ol { columns: 1; } }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 20px 0 8px; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.tile .label { font-size: 13px; color: var(--text-secondary); }
+.tile .value { font-size: 24px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.table-wrap { overflow-x: auto; margin: 8px 0 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-1); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-weight: 600; color: var(--text-secondary); background: var(--surface-2); white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+
+.wp { background: var(--surface-1); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 12px 16px; margin: 14px 0 18px; font-size: 15px; }
+.wp .wp-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; color: var(--text-secondary); }
+.wp ul { margin: 0; }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; line-height: 1; padding: 4px 7px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); white-space: nowrap; vertical-align: 1px; }
+.badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); }
+.badge.ok { color: var(--good-text); } .badge.ok::before { background: var(--good); }
+.badge.adj { color: var(--warning-text); } .badge.adj::before { background: var(--warning); }
+.badge.open { color: var(--serious-text); } .badge.open::before { background: var(--serious); }
+.badge.new::before { background: var(--text-secondary); border-radius: 2px; }
+.badge.wait::before { background: transparent; border: 1.5px solid var(--text-muted); width: 5px; height: 5px; }
+.badge.pass { color: var(--good-text); } .badge.pass::before { background: var(--good); }
+.badge.fail { color: var(--critical); } .badge.fail::before { background: var(--critical); }
+
+figure { margin: 18px 0 22px; background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 16px 16px 10px; }
+figure .fig-title { font-weight: 600; font-size: 15px; margin: 0 0 2px; }
+figure .fig-sub { font-size: 13px; color: var(--text-secondary); margin: 0 0 10px; }
+figcaption { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--text-secondary); margin: 0 0 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.key-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.key-ring { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 2px solid var(--neutral-mark); }
+.key-line { width: 18px; height: 0; border-top: 2px solid; display: inline-block; }
+.key-band { width: 14px; height: 10px; display: inline-block; background: var(--band); border: 1px solid var(--grid); }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: inherit; }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.panel-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin: 0 0 2px; }
+.tip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 12px; line-height: 1.45; color: var(--text-primary); box-shadow: 0 4px 14px rgba(0,0,0,0.12); white-space: nowrap; opacity: 0; transition: opacity 80ms; z-index: 5; }
+.tip b { font-weight: 600; }
+.tip .t2 { color: var(--text-secondary); }
+details { margin: 6px 0 0; font-size: 13px; }
+details summary { cursor: pointer; color: var(--text-secondary); }
+details .table-wrap { margin-top: 8px; max-height: 320px; overflow: auto; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.card h4 { margin: 0 0 6px; font-size: 15px; }
+.card p, .card ul { font-size: 14px; margin-bottom: 6px; }
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 10px 0 16px; }
+.flow div { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+.flow b { display: block; font-size: 14px; margin-bottom: 2px; }
+footer { margin-top: 64px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="top">
+  <p class="eyebrow">H-Log 프로젝트 · 결과 보고서 · Phase 0–1</p>
+  <h1>센서를 재고, 노이즈 모델을 세웠다</h1>
+  <p class="lede">Raspberry Pi 5와 Camera Module 3 Wide(Sony IMX708)에서 비압축 RAW를 얻는 체계를 만들고(Phase 0), 광자 전달 곡선(PTC)으로 게인 3개의 노이즈 모델을 측정했다. 센서 내장 HDR 모드의 응답도 함께 쟀다(Phase 1). 이 보고서는 결과를 정리하고, <a href="../whitepaper/README.md">기술백서</a>의 각 주장이 측정으로 어떻게 확인되거나 고쳐졌는지 연결한다.</p>
+  <p class="meta">작성 2026-11-22 · 기준 커밋 <code>cb690fd</code>(코드·문서), <code>10a4dda</code>(노이즈 모델 JSON) · 수치가 다르면 <a href="../decisions.md">decisions.md</a>가 기준</p>
+  <nav class="toc" aria-label="목차">
+    <ol>
+      <li><a href="#summary">한눈에 보기</a></li>
+      <li><a href="#how">읽는 법: 백서와의 연결 표시</a></li>
+      <li><a href="#p0">Phase 0 — 촬영 체계와 하드웨어 사실</a></li>
+      <li><a href="#setup">Phase 1 셋업 — 광원 판정</a></li>
+      <li><a href="#ptc">PTC와 노이즈 모델</a></li>
+      <li><a href="#issues">측정 중 문제와 해결</a></li>
+      <li><a href="#hdr">센서 HDR 모드 특성</a></li>
+      <li><a href="#design">설계 결과와 Phase 2·3 예비 계산</a></li>
+      <li><a href="#trace">백서 주장 ↔ 측정 결과 대조표</a></li>
+      <li><a href="#open">미해결 관찰과 다음 단계</a></li>
+      <li><a href="#repro">재현 방법과 산출물</a></li>
+    </ol>
+  </nav>
+</header>
+
+<section id="summary">
+  <h2>1. 한눈에 보기</h2>
+  <div class="tiles">
+    <div class="tile"><div class="label">Phase 0 수락 기준</div><div class="value">4 / 4</div><div class="sub">브래킷 노출비 최대 1.08% 오차</div></div>
+    <div class="tile"><div class="label">Phase 1 수락 기준</div><div class="value">통과</div><div class="sub">PTC R² 최소 0.9972 (기준 0.99)</div></div>
+    <div class="tile"><div class="label">단일 노출 DR</div><div class="value">10.6 stop</div><div class="sub">최소 게인 1.1228, 63.9 dB</div></div>
+    <div class="tile"><div class="label">판독 노이즈</div><div class="value">11.3 → 2.2 e⁻</div><div class="sub">게인 1.1228 → 16</div></div>
+    <div class="tile"><div class="label">센서 HDR 모드</div><div class="value">+5.1 stop</div><div class="sub">밝은 쪽만, 출력은 압축</div></div>
+    <div class="tile"><div class="label">테스트</div><div class="value">65 / 65</div><div class="sub">pytest, ctest 12/12</div></div>
+  </div>
+  <p>Phase 1의 핵심 산출물은 <b>게인별 노이즈 모델 σ²(x) = a·x + b</b> 세 개다(<code>configs/noise_single_{g1,g4,g16}.json</code>). 이 값이 Phase 2 브래킷 합성의 해석 모델과 Phase 3 H-Log 곡선의 입력이 된다. 측정값을 넣어 미리 계산해 보면, 최소 게인에서 브래킷 R = 16의 H-Log에 필요한 비트는 <b>9 bit</b>이고 10 bit면 양자화 지표 R(x) = 0.42로 여유가 있다(<a href="#design">8절</a>, Phase 3에서 확정).</p>
+  <p>결론 세 가지:</p>
+  <ul>
+    <li><b>노이즈 물리 모델은 맞았다.</b> 분산이 신호에 대해 직선이고(R² ≥ 0.997), 기울기 K가 아날로그 게인에 0.6% 안에서 비례한다. 판독 노이즈를 다크 프레임과 PTC 절편으로 따로 재면 2~6% 안에서 맞는다.</li>
+    <li><b>문서만 믿었으면 틀렸을 사실이 많았다.</b> 압축 RAW, BGGR 순서, 최소 게인 1.1228, 최소 노출 53 µs, 3 kHz로 깜빡이는 광원 등이다. 모두 측정으로 찾아 코드와 문서에 반영했다.</li>
+    <li><b>센서 HDR 모드는 비교군으로만 쓴다.</b> 밝은 쪽은 5.1 stop 넓어지지만, 출력이 꺾은선으로 압축되어 선형 RAW가 아니다. 선형 구간의 노이즈도 일반 모드보다 크다(분산 3.5배).</li>
+  </ul>
+</section>
+
+<section id="how">
+  <h2>2. 읽는 법: 백서와의 연결 표시</h2>
+  <p>각 절의 파란 테두리 상자 <b>“백서 연결”</b>은 기술백서의 어느 장·절이 이 결과를 설명하거나 예측했는지 가리킨다. 백서의 주장마다 측정 결과를 아래 표시로 판정했다. 전체 목록은 <a href="#trace">9절 대조표</a>에 있다.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>표시</th><th>뜻</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge ok">확인</span></td><td>백서의 원리·예측이 측정과 맞았다.</td></tr>
+      <tr><td><span class="badge adj">보정</span></td><td>원리는 맞지만 조건이나 수치를 고쳐야 했다. 백서에 반영했다.</td></tr>
+      <tr><td><span class="badge new">새 사실</span></td><td>백서가 다루지 않은 것을 측정에서 새로 찾았다.</td></tr>
+      <tr><td><span class="badge open">미해결</span></td><td>관찰은 했지만 원인을 확정하지 못했다. 다음 Phase에서 다시 본다.</td></tr>
+      <tr><td><span class="badge wait">대기</span></td><td>Phase 1 값으로 예비 계산만 했다. 해당 Phase에서 확정한다.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="p0">
+  <h2>3. Phase 0 — 촬영 체계와 하드웨어 사실</h2>
+  <p>목표는 측정에 쓸 수 있는 RAW를 재현 가능하게 얻는 것이었다. PC(WSL2)에서 SSH로 Pi에 촬영 스크립트를 보내 실행하고 결과를 회수한다(<code>scripts/pi.sh</code>). 결과마다 스크립트, 인자, git commit을 <code>pi_job.json</code>에 남긴다.</p>
+
+  <h3>3.1 수락 기준</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>기준</th><th>결과</th><th>근거</th></tr></thead>
+    <tbody>
+      <tr><td>브래킷 실제 노출비가 설정값과 2% 이내</td><td><span class="badge pass">통과</span> 최대 1.08%</td><td>16/4/1 ms 요청 → 실제 15979/3981/988 µs, R = 4.0138, 16.1731. 5세트 재촬영 0회</td></tr>
+      <tr><td>C++ npy 로더와 Python 로더 비트 동일</td><td><span class="badge pass">통과</span></td><td>15개 케이스 + Pi 실 RAW. 1비트 변형을 넣으면 10개 케이스가 실패함을 확인(테스트의 민감도 검사)</td></tr>
+      <tr><td><code>ctest</code>, <code>pytest</code> 통과</td><td><span class="badge pass">통과</span></td><td>ctest 12/12, pytest 33/33(Phase 0 시점), 경고 0</td></tr>
+      <tr><td><code>pi_notes.md</code>에 명령·모드·튜닝 파일 기록</td><td><span class="badge pass">통과</span></td><td>튜닝 파일 <code>pisp/imx708_wide.json</code> → <code>configs/tuning_ccm.json</code>, <code>tuning_alsc.json</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>3.2 측정으로 확인한 하드웨어 사실</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>항목</th><th>문서·기대</th><th>실측</th><th>코드에 준 영향</th></tr></thead>
+    <tbody>
+      <tr><td>기본 RAW 포맷</td><td>10bit RAW</td><td>8bit 압축 PiSP 포맷</td><td>비압축 <code>SBGGR16</code> 강제. 아니면 촬영 중단</td></tr>
+      <tr><td>비트 배치</td><td>—</td><td>16bit MSB 정렬</td><td><code>&gt;&gt; 6</code>으로 10bit</td></tr>
+      <tr><td>Bayer 순서</td><td><code>sensor_modes</code>는 RGGB</td><td>BGGR (180° 장착, h+v flip)</td><td>캡처 설정에서 읽어 JSON에 기록. LSC 테이블도 반전 적용(Phase 4)</td></tr>
+      <tr><td>최소 아날로그 게인</td><td>1.0</td><td>1.1228 = 1024/(1024−112)</td><td>PTC “게인 1”은 1.1228로 촬영·표기</td></tr>
+      <tr><td>노출 변경 반영</td><td>즉시</td><td>5프레임 뒤</td><td>브래킷에서 5프레임 폐기 후 메타데이터 확인</td></tr>
+      <tr><td>요청 대비 실제 노출</td><td>같음</td><td>1000 → 988 µs (−1.2%)</td><td>합성에는 메타데이터의 실제 노출비</td></tr>
+      <tr><td>블랙 / 화이트</td><td>—</td><td>64 / 1023, 1023에서 깨끗하게 잘림</td><td>정규화 분모 959</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="wp">
+    <div class="wp-title">백서 연결</div>
+    <ul>
+      <li><a href="../whitepaper/02_light_and_sensor.md">2장</a> §2.2 블랙 레벨, §2.3 Bayer 순서, §2.4 롤링 셔터의 노출 양자화 → 위 표가 2장 §3의 실측 표다. <span class="badge ok">확인</span></li>
+      <li><a href="../whitepaper/09_engineering.md">9장</a> §3.3 교차 검증(npy 비트 동일, 민감도 검사), §5 “추측하지 않고 측정한다” 규칙의 첫 사례. <span class="badge ok">확인</span></li>
+      <li><a href="../whitepaper/04_dynamic_range.md">4장</a> §2.1 “왜 설정값이 아닌 실제 노출비인가”의 근거 수치(15979/988 µs)가 여기서 나왔다.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="setup">
+  <h2>4. Phase 1 셋업 — 광원 판정</h2>
+  <p>PTC는 균일하고 일정한 빛(플랫필드)이 전제다. 본촬영 전에 30초짜리 확인 촬영(<code>capture/check_flatfield.py</code>)으로 광원을 수치로 판정했다. 판정 항목은 깜빡임, 밝기 안정성, 선형성, 균일도다. 광원 문제 세 가지를 모두 여기서 잡았다.</p>
+  <p><b>줄무늬 비</b>는 행 평균의 분산을 “화소 분산 / 열 수”로 나눈 값이다. 행끼리 상관이 없으면 약 1이다. 롤링 셔터는 행마다 다른 순간의 빛을 받으므로, 광원이 깜빡이면 이 값이 커진다.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>광원</th><th class="num">줄무늬 비<br>게인 16, 80 µs</th><th class="num">줄무늬 비<br>게인 16, 1.7 ms</th><th class="num">밝기 변화<br>30초</th><th>판정</th></tr></thead>
+    <tbody>
+      <tr><td>LED 트레이싱 패드, 1차</td><td class="num">206</td><td class="num">80.5</td><td class="num">+0.38%</td><td><span class="badge fail">탈락</span> 약 3 kHz 깜빡임</td></tr>
+      <tr><td>LED 트레이싱 패드, 밝기를 올린 2차</td><td class="num">140</td><td class="num">57.1</td><td class="num">+0.27%</td><td><span class="badge fail">탈락</span> 밝기를 올려도 깜빡임</td></tr>
+      <tr><td>두 번째 광원</td><td class="num">1.42</td><td class="num">1.11</td><td class="num">−4.33%</td><td><span class="badge fail">탈락</span> 점점 어두워짐</td></tr>
+      <tr><td>최종 광원</td><td class="num">13.1</td><td class="num">1.38</td><td class="num">−0.11%</td><td><span class="badge adj">조건부 채택</span> 짧은 노출만 오염, 분석에서 제외</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">경고 기준: 줄무늬 비 &gt; 1.5, 30초 밝기 범위 &gt; 0.5%. 프레임 전체 평균의 흔들림은 네 광원 모두 0.12% 이하라서, 행 단위로 보지 않았다면 깜빡임을 알 수 없었다. 원본: <code>results/p1/flatfield_check/ffcheck_20261121_{1935,1945,2005,2032}/report.md</code></p>
+  <ul>
+    <li>최종 광원은 노출 1.7 ms 이상에서 쌍 차분 분산 부풀림이 +0.1% 이하다. 더 짧은 노출의 오염은 <a href="#issues">6절</a>의 깜빡임 판정으로 뺐다.</li>
+    <li>ROI는 중앙 256×256 센서 화소다. 512×512에서는 블록 간 밝기 편차가 16%, 256×256에서는 7%다. 쌍 차분 분산은 국소 밝기와 함께 직선 위를 움직이므로 이 편차는 추정을 오염시키지 않는다.</li>
+    <li>본촬영 중 광원 모니터 프레임(게인 사이마다 같은 조건) 8장의 범위는 0.34%였다.</li>
+  </ul>
+  <div class="wp">
+    <div class="wp-title">백서 연결</div>
+    <ul>
+      <li><a href="../whitepaper/02_light_and_sensor.md">2장</a> §2.4 “PWM 조명은 가로 줄무늬를 만든다” → 3 kHz, 센서 약 24행 주기로 실측. <span class="badge ok">확인</span></li>
+      <li><a href="../whitepaper/03_noise_and_ptc.md">3장</a> §2.4는 쌍 차분이 고정 패턴을 지운다고 설명한다. 그러나 행마다 다른 밝기는 공간 구조라서 차분으로 지워지지 않는다(짧은 노출 분산 최대 +450%). 3장 §4 엔지니어링 포인트에 반영했다. <span class="badge adj">보정</span></li>
+      <li><a href="../phase1_equipment.md">Phase 1 장비 가이드</a>의 광원 조건(깜빡임 없음, 30초 안정)이 실제 판정 기준이 됐다.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="ptc">
+  <h2>5. PTC와 노이즈 모델</h2>
+  <p>게인 {1.1228, 4, 16}마다 포화 노출을 먼저 자동으로 재고, 그 0.01배 ~ 2.2배를 13단계로 찍었다(게인 16은 최소 노출 53 µs 제약으로 12단계). 단계마다 플랫필드 2쌍, 게인마다 다크 프레임 최단·최장 노출 × 10장이다. 모두 228장이다. 2.2배까지 가는 이유는 빨강·파랑이 초록의 절반 밝기라서 그 채널도 포화시키기 위해서다.</p>
+
+  <figure>
+    <p class="fig-title">그림 1. 광자 전달 곡선 — 평균 대비 쌍 차분 분산</p>
+    <p class="fig-sub">네 채널(B, G1, G2, R) 점을 함께 그렸다. 직선은 σ² = K·μ + b, b는 다크 프레임 실측값으로 고정(fixed_b). 양 축 로그.</p>
+    <div class="legend">
+      <span><i class="key-dot" style="background:var(--series-1)"></i>피팅에 쓴 점</span>
+      <span><i class="key-ring"></i>제외한 점(포화, 깜빡임)</span>
+      <span><i class="key-line" style="border-color:var(--series-2)"></i>fixed_b 직선</span>
+    </div>
+    <div class="panels" id="ptc-panels"></div>
+    <figcaption>점에 마우스를 올리면 채널, 노출, 평균, 분산, 제외 사유가 보인다. 오른쪽 끝에서 직선 아래로 떨어진 점은 포화된 쌍이다(클리핑으로 분산이 줄어든다). 원본: <code>results/p1/20261121_212525/points.csv</code></figcaption>
+  </figure>
+
+  <h3>5.1 결과</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>항목</th><th class="num">게인 1.1228</th><th class="num">게인 4</th><th class="num">게인 16</th></tr></thead>
+    <tbody>
+      <tr><td>R² (fixed_b / free) — 수락 기준 ≥ 0.99</td><td class="num">0.99722 / 0.99768</td><td class="num">0.99888 / 0.99886</td><td class="num">0.99772 / 0.99773</td></tr>
+      <tr><td>K [DN/e⁻]</td><td class="num">0.0543</td><td class="num">0.1945</td><td class="num">0.7707</td></tr>
+      <tr><td>변환 이득 [e⁻/DN]</td><td class="num">18.42</td><td class="num">5.14</td><td class="num">1.30</td></tr>
+      <tr><td>판독 노이즈 [DN / e⁻]</td><td class="num">0.613 / 11.3</td><td class="num">0.797 / 4.10</td><td class="num">1.703 / 2.21</td></tr>
+      <tr><td>포화 전자 수 (ADC 클립)</td><td class="num">17,666 e⁻</td><td class="num">4,931 e⁻</td><td class="num">1,244 e⁻</td></tr>
+      <tr><td>단일 노출 DR</td><td class="num">10.61 stop / 63.9 dB</td><td class="num">10.23 stop / 61.6 dB</td><td class="num">9.14 stop / 55.0 dB</td></tr>
+      <tr><td>블랙 레벨 [DN] (B, G1, G2, R)</td><td class="num">63.97, 63.96, 63.96, 63.97</td><td class="num">64.04, 64.04, 64.05, 64.05</td><td class="num">64.17, 64.15, 64.20, 64.21</td></tr>
+      <tr><td>암전류 (최장 노출 블랙 이동)</td><td class="num">+0.045 DN @ 101 ms</td><td class="num">+0.017 DN @ 28 ms</td><td class="num">+0.013 DN @ 7 ms</td></tr>
+      <tr><td>응답 선형성 최대 편차 (G1, ≥ 5% FS)</td><td class="num">0.23%</td><td class="num">0.20%</td><td class="num">2.03%</td></tr>
+      <tr><td><b>노이즈 모델 a / b</b> (정규화 x = (v − black)/959)</td><td class="num"><b>5.66e-5 / 4.08e-7</b></td><td class="num"><b>2.03e-4 / 6.90e-7</b></td><td class="num"><b>8.04e-4 / 3.15e-6</b></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>5.2 서로 독립인 두 가지 검증</h3>
+  <div class="two-col">
+    <div class="card">
+      <h4>K는 아날로그 게인에 비례하는가</h4>
+      <p>같은 전자에 게인을 G배 걸면 DN도 G배다. 그래서 K 비는 게인 비와 같아야 한다.</p>
+      <ul>
+        <li>게인 4 / 1.1228: 게인 비 3.562, K 비 3.583 (+0.6%)</li>
+        <li>게인 16 / 1.1228: 게인 비 14.250, K 비 14.198 (−0.4%)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>판독 노이즈 두 가지 측정이 맞는가</h4>
+      <p>다크 프레임 쌍 차분(빛 없음)과, 플랫 점만으로 자유 피팅한 PTC 절편을 비교했다.</p>
+      <ul>
+        <li>b [DN²] 자유 피팅 / 다크: 0.400 / 0.376, 0.619 / 0.635, 2.863 / 2.900</li>
+        <li>차이 2~6%. 최종 모델은 다크 값으로 b를 고정한다.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>5.3 노이즈 모델 파일 (CLAUDE.md 5.4 스키마)</h3>
+  <p>게인마다 구간 하나(kind = single)의 JSON을 만들었다. 대안 방식(free)의 a, b, 채널별 K, 휨, 입력 데이터의 SHA-256, 분석 커밋(<code>cb690fd</code>, dirty false)이 <code>assumptions</code>에 들어 있어 그대로 재현할 수 있다.</p>
+<pre>{
+  "kind": "single", "scale": "normalized_long_exposure", "x_max": 1.0,
+  "segments": [{"x_start": 0.0, "a": 5.6607e-05, "b": 4.0834e-07}],
+  "assumptions": {"analogue_gain": 1.1228, "method": "fixed_b", "K_dn_per_e": 0.05429,
+                  "read_noise_e": 11.29, "dr_stops": 10.61, "alternative": {"method": "free", ...},
+                  "per_channel_K_dn_per_e": {...}, "source": {"git": {"commit": "cb690fd…", "dirty": false}, ...}}
+}</pre>
+
+  <div class="wp">
+    <div class="wp-title">백서 연결</div>
+    <ul>
+      <li><a href="../whitepaper/03_noise_and_ptc.md">3장</a> §2.2 “분산은 평균에 대해 직선, 기울기 K, 절편 σ_r²” → R² 0.997~0.999. <span class="badge ok">확인</span> 단, 밝은 쪽에서 최대 5% 휜다(<a href="#issues">6절</a>).</li>
+      <li>3장 §2.6 “게인을 올리면 K가 G배” → 0.6% 안에서 일치. “판독 노이즈를 전자로 환산하면 고게인에서 작아진다” → 11.3 → 4.1 → 2.2 e⁻. “b는 G에 단순 비례하지 않는다” → 게인 비 1 : 3.56 : 14.25에 대해 b_DN 비 1 : 1.69 : 7.72. <span class="badge ok">확인</span></li>
+      <li>3장 §2.1 “암전류는 짧은 노출에서 작다” → 0.1초에서도 +0.045 DN. <span class="badge ok">확인</span></li>
+      <li>3장 §2.3 표의 “포화 전자 수 = 게인이 낮으면 full well”: 실측 포화는 모든 게인에서 ADC 1023 클립이었다. 그래서 17,666 e⁻는 full well이 아니라 “ADC 한계를 전자로 환산한 값”으로 표기했다. <span class="badge adj">보정</span></li>
+      <li><a href="../whitepaper/10_interview_guide.md">10장</a> §4 “외워 둘 숫자”의 K, 판독 노이즈, 포화, DR, R² 행이 이 표에서 나왔다.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="issues">
+  <h2>6. 측정 중 문제와 해결</h2>
+  <p>수락 기준을 처음부터 넘지는 못했다. 기준을 바꾸지 않고, 오염된 측정을 찾아 빼는 규칙을 코드로 만들었다(<code>python/cctvlog/sensor/ptc.py</code> <code>select_points</code>). 제외 사유는 점마다 <code>points.csv</code>에 남는다.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>문제</th><th>증거</th><th>조치</th><th>효과</th></tr></thead>
+    <tbody>
+      <tr><td><b>이웃 채널로 번지는 포화</b> (blooming으로 추정)</td><td>초록이 포화된 단계에서 R·B 분산이 약 20% 떨어지고, 차분 영상 이웃 상관이 0.01 → 0.2</td><td>한 채널이라도 포화되면 그 쌍의 네 채널을 모두 제외</td><td>게인 16 R² 0.953 → 0.998</td></tr>
+      <tr><td><b>남은 광원 깜빡임</b></td><td>짧은 노출에서 원래 분산 / 행 평균 제거 분산이 다크 프레임 기준(센서 자체 행 노이즈 약 1%)보다 1% 넘게 큼</td><td>해당 쌍을 네 채널 모두 제외. 분산은 행 평균을 빼지 않은 값을 그대로 씀</td><td>게인 4·16의 최저 2단계 제외</td></tr>
+      <tr><td><b>PTC 휨</b></td><td>밝은 구간 K / 어두운 구간 K = 0.946(1.77만 e⁻), 0.966(4.9천 e⁻), 0.992(1.2천 e⁻). DN이 아니라 전자 수에 따라 커짐</td><td>절편 b를 다크 프레임 값으로 고정하고 기울기만 피팅(fixed_b)</td><td>자유 피팅에서 b가 부푸는 문제 제거(미리보기 게인 16: 4.75 대 2.93 DN²). σ 영향 최대 약 2.7%</td></tr>
+      <tr><td><b>채널별 K 차이</b></td><td>약 8% (B −5%, R +3~6%)</td><td>공통 K 하나를 쓰고 채널별 값은 JSON에 기록</td><td>σ로 4% 이내. Phase 4에서 재검토</td></tr>
+      <tr><td><b>짧은 노출의 응답 초과</b></td><td>게인 16에서 53 µs +6.4%, 160 µs +2.0%, 320 µs +1.4%</td><td>PTC는 측정된 평균을 x로 쓰므로 영향 없음. 기록만</td><td>Phase 2 브래킷에서 다시 확인</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">피팅 점 / 제외 수: 게인 1.1228은 80 / 24(포화), 게인 4는 72 / 32(포화 24, 깜빡임 8), 게인 16은 48 / 48(포화 32, 깜빡임 16).</p>
+  <div class="wp">
+    <div class="wp-title">백서 연결</div>
+    <ul>
+      <li><a href="../whitepaper/03_noise_and_ptc.md">3장</a> §3.1 (1)~(5)가 이 표를 비전공자용으로 풀어 쓴 것이다. 3장 §4 “오염 판정은 프레임 쌍 단위로”, “독립된 두 측정으로 서로 검증한다”가 여기서 나온 엔지니어링 원칙이다. <span class="badge new">새 사실</span></li>
+      <li>3장 면접 Q&amp;A “R² 0.99를 못 넘으면요?”에서 “기준을 바꾸지 않고 원인을 먼저 찾는다”고 답한 대로 진행했다(<a href="../whitepaper/09_engineering.md">9장</a> §3.4). <span class="badge ok">확인</span></li>
+      <li><a href="../whitepaper/10_interview_guide.md">10장</a> §6의 경험 이야기 세 개가 이 절의 사례다: “보이지 않는 측정 오류를 찾은 경험”(깜빡임), “기준을 낮추지 않고 원인을 찾은 경험”(blooming), “두 측정을 맞춰 보며 모델을 정한 경험”(fixed_b).</li>
+      <li>3장 Q&amp;A는 “K는 채널과 무관해야 한다”고 답한다. 실측은 8% 차이가 나고 원인은 아직 모른다. <span class="badge open">미해결</span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="hdr">
+  <h2>7. 센서 HDR 모드 특성</h2>
+  <p>IMX708에는 센서 안에서 여러 노출을 합치는 HDR 모드가 있다. 내부가 공개되지 않은 블랙박스라서, 같은 플랫필드에서 <b>노출을 바꿔 가며 출력이 어떻게 변하는지</b>만 쟀다. 게인 1.1228(858 µs ~ 1 s, 35단계)과 게인 16(포화까지) 두 번 스윕하고, 유효 노출 E = (게인 / 1.1228) × 노출로 이어 붙였다. 두 스윕이 겹치는 20점(E 12 ms ~ 844 ms)에서 응답 차이는 중앙값 0.32%, 최대 1.33%라 이 가정이 성립한다.</p>
+
+  <figure>
+    <p class="fig-title">그림 2. 센서 HDR 모드 응답 — 유효 노출 대비 출력</p>
+    <p class="fig-sub">초록 G1 채널, 중앙 256×256. 회색 직선은 같은 광원의 일반 모드 감도(46.1 ms에서 포화). 양 축 로그.</p>
+    <div class="legend">
+      <span><i class="key-dot" style="background:var(--series-1)"></i>게인 1.1228 스윕</span>
+      <span><i class="key-dot" style="background:var(--series-2)"></i>게인 16 스윕</span>
+      <span><i class="key-line" style="border-color:var(--ref-line)"></i>일반 모드 감도</span>
+      <span><i class="key-band"></i>첫 경계 (5.15 ~ 6.44 ms)</span>
+    </div>
+    <div class="chart" id="hdr-response"></div>
+    <details><summary>표로 보기</summary><div class="table-wrap"><table id="hdr-table"></table></div></details>
+    <figcaption>선형 구간에서는 일반 모드 직선과 겹친다. 첫 경계를 지나면 기울기가 1/14로 떨어지고, 그 뒤 기울기가 단계적으로 줄며 약 1.6 s에서 포화한다.</figcaption>
+  </figure>
+
+  <figure>
+    <p class="fig-title">그림 3. SNR — 장면 기준과 출력 기준, 일반 모드 모델</p>
+    <p class="fig-sub">게인 1.1228. 장면(입력) 기준 SNR은 출력 노이즈를 구간 직선의 기울기로 나눈 근사값이다. 일반 모드는 노이즈 모델(a, b)로 계산했다.</p>
+    <div class="legend">
+      <span><i class="key-dot" style="background:var(--series-1)"></i>센서 HDR, 장면 기준</span>
+      <span><i class="key-dot" style="background:var(--series-2)"></i>센서 HDR, 출력 기준</span>
+      <span><i class="key-line" style="border-color:var(--series-3)"></i>일반 모드 모델</span>
+    </div>
+    <div class="chart" id="hdr-snr"></div>
+    <figcaption>출력 SNR은 압축 덕분에 경계 뒤에도 계속 올라가 보이지만, 장면 기준으로 되돌리면 첫 경계에서 약 20 dB 떨어진다. 선형 구간에서도 일반 모드보다 낮다(같은 출력 레벨에서 −5.5 dB).</figcaption>
+  </figure>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>항목</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td>선형 구간</td><td>E ≤ 5.15 ms (출력 ≤ 0.110 = 105 DN). 기울기는 일반 모드의 0.968배(짧은 노출 메타데이터 흔들림 ±6% 포함), 절편 +1.65 DN</td></tr>
+      <tr><td>첫 경계</td><td>E 5.15 ~ 6.44 ms, 출력 0.110 ~ 0.122. 다음 점이 일반 모드 직선보다 −12.5%</td></tr>
+      <tr><td>경계 뒤 기울기 (선형 구간 대비)</td><td>1/14 (6~14 ms) → 1/26 (18~80 ms) → 1/39 (89~300 ms) → 1/49 (0.36~1 s) → 1/31 (1.0~1.3 s). 구간별 직선 7개를 BIC로 선택</td></tr>
+      <tr><td>포화와 DR 확장</td><td>E ≈ 1.6 s. 일반 모드 46.1 ms 대비 34.6배 = <b>+5.1 stop</b> (밝은 쪽만)</td></tr>
+      <tr><td>선형 구간 노이즈</td><td>같은 출력에서 분산이 일반 모드의 <b>3.5배</b>, SNR −5.5 dB (9점 범위 −3.7 ~ −6.4 dB)</td></tr>
+      <tr><td>첫 경계 전후</td><td>출력 SNR 28.9 → 29.8 dB로 거의 그대로. 장면 기준 SNR 28.7 → 7.6 dB (근사)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>7.1 측정 중 발견한 노출 동작</h3>
+  <ul>
+    <li>HDR 모드의 최소 노출은 858 µs, 노출 단위는 약 71.5 µs다. 일반 모드(53 µs, 13.36 µs)와 다르다.</li>
+    <li>요청값이 가장 가까운 단위로 반올림되지 않는다(1000 µs 요청 → 858 µs). 그래서 첫 시도에서는 “요청값과 일치하는 프레임”을 하나도 받지 못했다.</li>
+    <li>시간 초과 오류에 실제로 받은 (노출, 게인)을 남기도록 고쳐서 원인을 찾았다. 그 뒤 “메타데이터가 3프레임 연속 같은 값이 될 때까지 기다리고 그 값으로 프레임을 고르는” 방식(<code>Session.settle</code>)으로 바꿨다.</li>
+  </ul>
+
+  <div class="wp">
+    <div class="wp-title">백서 연결</div>
+    <ul>
+      <li><a href="../whitepaper/03_noise_and_ptc.md">3장</a> §3.2가 이 절의 요약이다. <a href="../whitepaper/04_dynamic_range.md">4장</a> §2.4 비교표의 “센서 HDR 모드” 열(+5.1 stop, 첫 경계 약 20 dB, 비선형 압축)을 이 측정으로 채웠다. <span class="badge new">새 사실</span></li>
+      <li>4장 §2.3은 “짧은 노출 쪽은 빛을 1/R만 모아 경계에서 노이즈가 뛴다”고 예측한다. 센서 HDR의 첫 경계에서도 장면 기준 노이즈가 크게 뛰었다. 같은 방향이다. 다만 내부 합성 방식을 모르므로 R과의 정량 관계는 주장하지 않는다. <span class="badge ok">확인</span> (방향만)</li>
+      <li>CLAUDE.md는 센서 HDR 모드를 “비교군으로만”이라고 정했다. 측정이 그 근거를 줬다: 출력이 선형이 아니고, 어두운 쪽 노이즈가 크다.</li>
+      <li><a href="../whitepaper/09_engineering.md">9장</a> §5 “하드웨어 장애에 멈추지 않는 코드”의 세 번째 항목(시간 초과 오류에 실제 받은 값을 남긴다)이 이 사례다.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="design">
+  <h2>8. 설계 결과와 Phase 2·3 예비 계산</h2>
+  <p>Phase 1의 설계 결정은 두 가지다. 하나는 <b>노이즈 모델 방식</b>이고, 하나는 측정 코드의 <b>판정 규칙</b>이다. 그리고 측정한 (a, b)를 백서 4·5장의 식에 넣으면 Phase 2·3의 결과를 미리 가늠할 수 있다. 예비 계산은 확정값이 아니다.</p>
+
+  <h3>8.1 설계 결정</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>결정</th><th>근거</th><th>버린 대안</th></tr></thead>
+    <tbody>
+      <tr><td>노이즈 모델은 <b>fixed_b</b>: b는 다크 프레임 쌍 차분, K는 네 채널 공동 가중 최소제곱(가중치 1/σ⁴)</td><td>다크 b는 깜빡임과 휨 어느 쪽에도 오염되지 않은 직접 측정</td><td>free 피팅. 최종 제외 규칙에서는 차이가 b 2~6%, K 1% 미만이라 JSON에 대안으로 남김</td></tr>
+      <tr><td>포화·깜빡임 제외는 <b>쌍 단위</b></td><td>어두운 채널은 같은 오염도 노이즈에 묻혀 덜 보인다. 채널별 제외로는 게인 16 R² 0.953</td><td>채널별 제외</td></tr>
+      <tr><td>분산은 행 평균을 <b>빼지 않은</b> 원래 쌍 차분</td><td>센서 자체 행 노이즈(약 1%)는 진짜 노이즈라서 다크 b와 같은 기준이어야 한다</td><td>모든 점에 행 평균 제거</td></tr>
+      <tr><td>K는 채널 공통 하나</td><td>채널 차이가 σ로 4% 이내</td><td>채널별 모델(Phase 4에서 노이즈 기준점을 정할 때 재검토)</td></tr>
+      <tr><td>게인 “1”은 실제 값 1.1228로 촬영·표기</td><td>1.0은 물리적으로 설정 불가</td><td>디지털 게인으로 맞추기(RAW에는 해당 없음)</td></tr>
+      <tr><td>노출을 예측할 수 없는 모드는 “안정된 실제값”으로 프레임 선택</td><td>HDR 모드 1000 → 858 µs</td><td>요청값 허용 오차만 늘리기</td></tr>
+      <tr><td>센서 HDR 비교에는 장면 기준 SNR 사용</td><td>출력 SNR은 압축 때문에 실제보다 커 보임</td><td>출력 SNR</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>8.2 Phase 2 예비 계산: 브래킷 DR과 SNR dip</h3>
+  <p>백서 4장 §2.2 DR_bracket = DR_single + log₂R, §2.3 σ² = (aR)·x + bR², 경계 τ = 0.9에서 SNR 차이를 Phase 0의 실제 노출비(R = 4.0138, 16.1731)로 계산했다. 경계 띠의 가중 합은 넣지 않았다.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>게인</th><th class="num">단일 DR</th><th class="num">R = 4.01 DR</th><th class="num">R = 16.17 DR</th><th class="num">경계 직전 SNR</th><th class="num">dip R = 4.01</th><th class="num">dip R = 16.17</th></tr></thead>
+    <tbody>
+      <tr><td>1.1228</td><td class="num">10.61 stop</td><td class="num">12.62 stop</td><td class="num">14.63 stop</td><td class="num">42.0 dB</td><td class="num">6.14 dB</td><td class="num">12.58 dB</td></tr>
+      <tr><td>4</td><td class="num">10.23 stop</td><td class="num">12.24 stop</td><td class="num">14.25 stop</td><td class="num">36.5 dB</td><td class="num">6.08 dB</td><td class="num">12.33 dB</td></tr>
+      <tr><td>16</td><td class="num">9.14 stop</td><td class="num">11.14 stop</td><td class="num">13.15 stop</td><td class="num">30.5 dB</td><td class="num">6.09 dB</td><td class="num">12.36 dB</td></tr>
+    </tbody>
+  </table></div>
+  <p>dip은 샷 노이즈만 있을 때의 근사 10·log₁₀R(6.04, 12.09 dB)보다 0.04~0.5 dB 크다. 판독 노이즈 항 bR²이 보태는 몫이다. 최소 게인 R = 16에서 브래킷은 센서 HDR 모드(+5.1 stop)와 비슷한 +4.0 stop을 넓히면서, 출력이 선형으로 남는다.</p>
+
+  <h3>8.3 Phase 3 예비 계산: H-Log에 필요한 비트</h3>
+  <p>백서 5장 §2.6의 N = ∫₀^{x_max} dx/σ(x)와 필요 비트 ⌈log₂N⌉, 양자화 지표 R(x) = N / (2^bits − 1)을 계산했다. 5장의 예시 표는 스키마 예시 값(a = 0.0012, b = 2e-6)으로 만든 것이라 실측값과 크게 다르다.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>경우 (게인 1.1228)</th><th class="num">5장 예시 N</th><th class="num">실측 N</th><th class="num">⌈log₂N⌉</th><th class="num">R(x) 8 bit</th><th class="num">R(x) 10 bit</th><th class="num">R(x) 12 bit</th></tr></thead>
+    <tbody>
+      <tr><td>단일 노출 (x_max = 1)</td><td class="num">55.4</td><td class="num">244.2</td><td class="num">8</td><td class="num">0.96</td><td class="num">0.239</td><td class="num">0.060</td></tr>
+      <tr><td>브래킷 R = 4.01</td><td class="num">82.8</td><td class="num">369.5</td><td class="num">9</td><td class="num">1.45</td><td class="num">0.361</td><td class="num">0.090</td></tr>
+      <tr><td>브래킷 R = 16.17</td><td class="num">96.4</td><td class="num">430.7</td><td class="num">9</td><td class="num">1.69</td><td class="num">0.421</td><td class="num">0.105</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><b>H2에 대한 예비 답.</b> 최소 게인 브래킷 R = 16은 9 bit가 필요하고, 10 bit면 R(x) = 0.42로 양자화가 더하는 노이즈가 원래 노이즈의 약 0.7%다(√(1 + R²/12) − 1). 8 bit는 R(x) &gt; 1이라 부족하다. 이것이 Phase 5 대조군(8 bit H-Log)을 두는 이유와 맞는다.</li>
+    <li><b>“범위와 정보량은 다르다”(5장 §2.6).</b> 범위를 16배(4 stop) 넓혀도 N은 244 → 431로 1.76배만 늘어난다. 샷 노이즈만 있다면 노출 하나가 보탤 수 있는 단계 수의 상한은 2/√a = 266이다. 실측값에서도 이 통찰이 그대로 성립한다.</li>
+    <li><b>게인이 높으면 비트가 덜 필요하다.</b> 게인 16은 노이즈가 커서 R = 16에서도 N = 116(7 bit)이다. 같은 곡선 하나를 모든 게인에 쓰면 저게인에 맞춰야 한다.</li>
+    <li><b>LUT 위험(5장 §2.8).</b> 예시 값으로는 x = 0 근처에서 인덱스 한 칸이 약 1.8 LSB였다. 실측값으로는 게인 1.1228, R = 16에서 0.92 LSB(반올림 오차 약 0.46 LSB)로 1 LSB 기준 안이다. 게인 4·16에서는 1.31·1.22 LSB라서 Phase 3 오차 표에서 확인해야 한다.</li>
+  </ul>
+  <div class="wp">
+    <div class="wp-title">백서 연결</div>
+    <ul>
+      <li><a href="../whitepaper/04_dynamic_range.md">4장</a> §3의 “결과 (Phase 2 후 채움)” 표에서 예측 열(6.0, 12.0 dB)을 실측 (a, b)로 다시 계산하면 6.1, 12.6 dB다. 실측 열은 Phase 2에서 채운다. <span class="badge wait">대기</span></li>
+      <li><a href="../whitepaper/05_hlog_curve.md">5장</a> §2.6 예시 표는 Phase 3에서 위 실측 N으로 바꾼다. 결론(“R을 키워도 N은 조금만 늘어난다”, “10 bit는 압축·복원 여유”)은 실측값에서도 유지된다. <span class="badge adj">보정</span> (수치만)</li>
+      <li><a href="../whitepaper/01_overview.md">1장</a> §5 가설 H1·H3는 아직 판정하지 않는다. H2는 위 예비 계산이 첫 근거다. <span class="badge wait">대기</span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="trace">
+  <h2>9. 백서 주장 ↔ 측정 결과 대조표</h2>
+  <p>기술백서가 Phase 0·1 범위에서 한 주장을 모두 모았다. 위 절들의 “백서 연결” 상자를 한 표로 정리한 것이다.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>백서</th><th>주장</th><th>측정 결과</th><th>판정</th><th>보고서</th></tr></thead>
+    <tbody>
+      <tr><td><a href="../whitepaper/02_light_and_sensor.md">2장</a> §2.2</td><td>블랙 레벨은 10bit 64</td><td>63.96 (게인 1.1228) ~ 64.21 (게인 16)</td><td><span class="badge ok">확인</span></td><td><a href="#ptc">5.1</a></td></tr>
+      <tr><td>2장 §2.3</td><td>Bayer 순서를 하드코딩하면 안 된다</td><td>문서 RGGB, 실제 BGGR</td><td><span class="badge ok">확인</span></td><td><a href="#p0">3.2</a></td></tr>
+      <tr><td>2장 §2.4</td><td>노출은 라인 시간의 정수배</td><td>단위 13.36 µs, 1 ms → 988 µs. 최소 노출은 센서 정보 13 µs가 아니라 53 µs</td><td><span class="badge ok">확인</span> <span class="badge new">새 사실</span></td><td><a href="#p0">3.2</a></td></tr>
+      <tr><td>2장 §2.4</td><td>PWM 조명은 가로 줄무늬를 만든다</td><td>3 kHz, 줄무늬 비 최대 206, 분산 최대 +450%</td><td><span class="badge ok">확인</span></td><td><a href="#setup">4</a></td></tr>
+      <tr><td><a href="../whitepaper/03_noise_and_ptc.md">3장</a> §2.2</td><td>σ² = K·μ + σ_r²는 직선</td><td>R² 0.9972 / 0.9989 / 0.9977. 밝은 쪽 휨 최대 5%(전자 수 의존)</td><td><span class="badge ok">확인</span></td><td><a href="#ptc">5</a></td></tr>
+      <tr><td>3장 §2.4</td><td>쌍 차분이 고정 패턴과 밝기 기울기를 지운다</td><td>맞지만, 행마다 다른 깜빡임은 지우지 못한다</td><td><span class="badge adj">보정</span></td><td><a href="#setup">4</a></td></tr>
+      <tr><td>3장 §2.6</td><td>K는 게인에 비례</td><td>K 비가 게인 비와 +0.6%, −0.4%</td><td><span class="badge ok">확인</span></td><td><a href="#ptc">5.2</a></td></tr>
+      <tr><td>3장 §2.6</td><td>판독 노이즈(e⁻)는 고게인에서 작아진다</td><td>11.3 → 4.10 → 2.21 e⁻</td><td><span class="badge ok">확인</span></td><td><a href="#ptc">5.1</a></td></tr>
+      <tr><td>3장 §2.6</td><td>b는 G에 단순 비례하지 않는다 → 게인별 측정</td><td>b_DN 비 1 : 1.69 : 7.72 (게인 비 1 : 3.56 : 14.25)</td><td><span class="badge ok">확인</span></td><td><a href="#ptc">5.1</a></td></tr>
+      <tr><td>3장 §2.1</td><td>암전류는 짧은 노출에서 작다</td><td>0.1 s에서 +0.045 DN</td><td><span class="badge ok">확인</span></td><td><a href="#ptc">5.1</a></td></tr>
+      <tr><td>3장 §2.3</td><td>저게인 포화 = full well</td><td>모든 게인에서 ADC 1023 클립. “ADC 한계의 전자 환산값”으로 표기</td><td><span class="badge adj">보정</span></td><td><a href="#ptc">5.1</a></td></tr>
+      <tr><td>3장 Q&amp;A</td><td>K는 채널과 무관해야 한다</td><td>채널 차이 약 8%</td><td><span class="badge open">미해결</span></td><td><a href="#issues">6</a></td></tr>
+      <tr><td>3장 §3.1</td><td>(측정 문제) blooming, 깜빡임, 휨, 짧은 노출 초과</td><td>쌍 단위 제외, fixed_b로 해결. 짧은 노출 초과는 원인 미확정</td><td><span class="badge new">새 사실</span></td><td><a href="#issues">6</a></td></tr>
+      <tr><td>3장 §3.2, <a href="../whitepaper/04_dynamic_range.md">4장</a> §2.4 표</td><td>센서 HDR 모드는 블랙박스, 비교군</td><td>+5.1 stop, 꺾은선 압축, 선형 구간 분산 3.5배, 첫 경계 장면 SNR −20 dB</td><td><span class="badge new">새 사실</span></td><td><a href="#hdr">7</a></td></tr>
+      <tr><td>4장 §2.1</td><td>합성에는 실제 노출비</td><td>R = 4.0138, 16.1731 (설정 4, 16)</td><td><span class="badge ok">확인</span></td><td><a href="#p0">3.1</a></td></tr>
+      <tr><td>4장 §2.2</td><td>DR_bracket = DR_single + log₂R</td><td>예비: 12.6 / 14.6 stop (게인 1.1228)</td><td><span class="badge wait">대기</span></td><td><a href="#design">8.2</a></td></tr>
+      <tr><td>4장 §2.3</td><td>SNR dip ≈ 10·log₁₀R</td><td>예비: 6.1 / 12.6 dB</td><td><span class="badge wait">대기</span></td><td><a href="#design">8.2</a></td></tr>
+      <tr><td><a href="../whitepaper/05_hlog_curve.md">5장</a> §2.6</td><td>예시 N 55~103, 6~7 bit</td><td>실측 N 244~431, 8~9 bit</td><td><span class="badge adj">보정</span></td><td><a href="#design">8.3</a></td></tr>
+      <tr><td>5장 §2.6</td><td>범위(stop)와 정보량(단계 수)은 다르다</td><td>범위 16배 → N 1.76배, 상한 2/√a = 266</td><td><span class="badge ok">확인</span></td><td><a href="#design">8.3</a></td></tr>
+      <tr><td>5장 §2.8</td><td>x = 0 근처 LUT 인덱스 한 칸 ≈ 1.8 LSB</td><td>게인 1.1228 R = 16에서 0.92 LSB, 게인 4·16에서 1.2~1.3 LSB</td><td><span class="badge wait">대기</span></td><td><a href="#design">8.3</a></td></tr>
+      <tr><td><a href="../whitepaper/09_engineering.md">9장</a> §3.3</td><td>교차 검증, 테스트의 민감도 검사</td><td>npy 15케이스, 1비트 변형 시 10개 실패. PTC는 합성 센서로 K·판독 노이즈를 2% 안에서 되찾음</td><td><span class="badge ok">확인</span></td><td><a href="#p0">3.1</a></td></tr>
+      <tr><td>9장 §5</td><td>추측하지 않고 측정한다</td><td>압축 RAW, BGGR, 게인 1.1228, 5프레임 지연, 53 µs, HDR 858 µs, 깜빡임</td><td><span class="badge ok">확인</span></td><td><a href="#p0">3</a>, <a href="#setup">4</a>, <a href="#hdr">7.1</a></td></tr>
+      <tr><td>9장 §5</td><td>하드웨어 장애에 멈추지 않는 코드</td><td>30초 감시 타이머(I2C 오류로 멈춤 경험), 빛 누출 시 즉시 중단(실제 시험)</td><td><span class="badge new">새 사실</span></td><td><a href="#repro">11</a></td></tr>
+      <tr><td><a href="../whitepaper/01_overview.md">1장</a> §5</td><td>가설 H1, H2, H3</td><td>H2만 예비 근거(R = 16에서 10 bit 여유). H1·H3는 Phase 3·5 이후</td><td><span class="badge wait">대기</span></td><td><a href="#design">8.3</a></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="open">
+  <h2>10. 미해결 관찰과 다음 단계</h2>
+  <div class="two-col">
+    <div class="card">
+      <h4>Phase 2에서 다시 볼 것</h4>
+      <ul>
+        <li><b>짧은 노출 응답 초과.</b> 게인 16에서 53 µs +6.4%. 브래킷 짧은 노출(≥ 988 µs, 최소 게인)에서는 0.2~0.8% 범위로 추정. 합성 경계 단차로 나타나는지 본다.</li>
+        <li><b>Phase 0 노출비 편차.</b> 화소로 구한 노출비가 메타데이터보다 0.4~0.6% 크다. 블랙 레벨(−0.04 DN)로는 설명되지 않는다. 위 현상과 같은 방향인지 본다.</li>
+        <li><b>PTC 휨.</b> 브래킷 짧은 노출 구간의 분산이 해석 모델과 ±10% 안에 드는지(Phase 2 수락 기준)에 영향을 준다.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>나중 Phase에서 볼 것</h4>
+      <ul>
+        <li><b>채널별 K 8% 차이.</b> Phase 4에서 노이즈 기준점(LSC·WB·CCM 이후)을 정할 때.</li>
+        <li><b>센서 HDR 선형 구간 노이즈 3.5배.</b> 내부 변환 이득이나 디지털 스케일 가능성. 블랙박스라 확인 수단 없음. 비교군 그래프에 장면 기준 SNR로만 쓴다.</li>
+        <li><b>LUT 인덱스 간격.</b> 게인 4·16에서 1 LSB를 넘을 수 있다. Phase 3 오차 표.</li>
+      </ul>
+    </div>
+  </div>
+  <h3>다음: Phase 2 — DR 확보 (핵심, 축소 불가)</h3>
+  <div class="flow">
+    <div><b>1. Python 기준 모델</b><code>ref/bracket_merge.py</code>, float64</div>
+    <div><b>2. C++ 합성</b><code>hdr::bracket_merge</code>, 기준 대비 ≤ 1e-5</div>
+    <div><b>3. 플랫필드 브래킷</b>밝기 15단계 이상, 이번 셋업 재사용</div>
+    <div><b>4. 합성 노이즈 실측</b>해석 모델과 구간별 ±10%</div>
+    <div><b>5. DCG 시뮬레이터</b>몬테카를로 1e5, 분산 ±3%</div>
+  </div>
+</section>
+
+<section id="repro">
+  <h2>11. 재현 방법과 산출물</h2>
+  <h3>11.1 명령</h3>
+<pre># Pi 촬영 (PC에서, scripts/pi.sh가 capture/ 동기화 → 실행 → data/pi_runs/로 회수)
+scripts/pi.sh job ptc_flat_...       capture_ptc.py --part flat
+scripts/pi.sh job ptc_dark_...       capture_ptc.py --part dark
+scripts/pi.sh job sensor_hdr_g1_...  capture_sensor_hdr.py --gain 1.1228 --sweep ...
+
+# PC 분석
+python experiments/p1_ptc.py configs/p1_ptc.yaml               # → results/p1/&lt;ts&gt;/, configs/noise_single_*.json
+python experiments/p1_sensor_hdr.py configs/p1_sensor_hdr.yaml # → results/p1_sensor_hdr/&lt;ts&gt;/
+pytest tests/py                                                # 65 passed</pre>
+  <p class="small muted">정확한 인자는 <a href="../../README.md">README</a> 5절과 <a href="../pi_notes.md">pi_notes.md</a>에 있다. <code>data/</code>와 <code>results/</code>는 git에 넣지 않는다. 이 보고서의 그림은 <code>results/p1/20261121_212525</code>와 <code>results/p1_sensor_hdr/20261121_212533</code>의 값을 문서 안에 넣어 그렸다.</p>
+
+  <h3>11.2 코드와 데이터</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>구분</th><th>위치</th><th>역할</th></tr></thead>
+    <tbody>
+      <tr><td>촬영</td><td><code>capture/flatsession.py</code></td><td>공통 세션: 30초 감시 타이머, 실제 노출 안정 대기(<code>settle</code>), 프레임 JSON에 요청값·실제값 기록</td></tr>
+      <tr><td></td><td><code>capture/check_flatfield.py</code></td><td>광원 판정(깜빡임, 안정성, 선형성, 균일도)</td></tr>
+      <tr><td></td><td><code>capture/capture_ptc.py</code></td><td>포화 노출 자동 측정 → 밝기 단계 계획 → flat 쌍 / dark. 빛 누출 시 중단</td></tr>
+      <tr><td></td><td><code>capture/capture_sensor_hdr.py</code></td><td>센서 HDR 켜고 노출 스윕, 종료 시 항상 원복</td></tr>
+      <tr><td>분석</td><td><code>python/cctvlog/sensor/ptc.py</code></td><td>쌍 차분 분산, 쌍 단위 제외, fixed_b / free 피팅, 휨, 선형성</td></tr>
+      <tr><td></td><td><code>python/cctvlog/sensor/noise_model.py</code></td><td>5.4 스키마 JSON 쓰기·읽기</td></tr>
+      <tr><td></td><td><code>python/cctvlog/sensor/sensor_hdr.py</code></td><td>경계 검출, 구간 분할(DP + BIC), 게인 겹침, 장면 기준 SNR</td></tr>
+      <tr><td>테스트</td><td><code>tests/py/test_ptc.py</code> 외 3개</td><td>K·판독 노이즈를 아는 합성 센서로 분석 검증, 촬영 로직 가짜 세션 테스트</td></tr>
+      <tr><td>데이터</td><td><code>data/pi_runs/ptc_flat_20261121_2044</code></td><td>flat 168장</td></tr>
+      <tr><td></td><td><code>data/pi_runs/ptc_dark_20261121_2052</code></td><td>dark 60장</td></tr>
+      <tr><td></td><td><code>data/pi_runs/sensor_hdr_g{1,16}_20261121_21{15,17}</code></td><td>센서 HDR 스윕 244장</td></tr>
+      <tr><td>설계 산출물</td><td><code>configs/noise_single_{g1,g4,g16}.json</code></td><td>Phase 2·3 입력</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>
+  H-Log: 영상감시용 WDR(HDR) 대응 노이즈 매칭 Log 곡선 및 보관 스트림 · Phase 0–1 결과 보고서 · 관련 문서:
+  <a href="../whitepaper/README.md">기술백서</a> · <a href="../decisions.md">결정 기록</a> · <a href="../pi_notes.md">Pi 실측 노트</a> · <a href="../phase1_equipment.md">Phase 1 장비 가이드</a>
+</footer>
+</div>
+
+<script id="report-data" type="application/json">{"ptc":[["g1","B",5.533,0.6986,1,"",454],["g1","G1",9.479,0.8864,1,"",454],["g1","G2",9.438,0.8776,1,"",454],["g1","R",4.879,0.6914,1,"",454],["g1","B",5.52,0.7058,1,"",454],["g1","G1",9.472,0.8732,1,"",454],["g1","G2",9.427,0.8655,1,"",454],["g1","R",4.898,0.6942,1,"",454],["g1","B",10.918,0.9595,1,"",908],["g1","G1",18.712,1.4649,1,"",908],["g1","G2",18.622,1.4139,1,"",908],["g1","R",9.566,0.9299,1,"",908],["g1","B",10.922,0.9666,1,"",908],["g1","G1",18.708,1.4374,1,"",908],["g1","G2",18.643,1.4343,1,"",908],["g1","R",9.564,0.9289,1,"",908],["g1","B",27.047,1.7986,1,"",2298],["g1","G1",47.467,3.0459,1,"",2298],["g1","G2",47.392,2.9587,1,"",2298],["g1","R",23.68,1.705,1,"",2298],["g1","B",27.052,1.7735,1,"",2298],["g1","G1",47.488,3.0237,1,"",2298],["g1","G2",47.381,2.9643,1,"",2298],["g1","R",23.675,1.708,1,"",2298],["g1","B",54.21,3.1925,1,"",4596],["g1","G1",95.276,5.5632,1,"",4596],["g1","G2",95.083,5.4539,1,"",4596],["g1","R",47.452,3.0542,1,"",4596],["g1","B",54.158,3.1837,1,"",4596],["g1","G1",95.241,5.6611,1,"",4596],["g1","G2",95.078,5.559,1,"",4596],["g1","R",47.436,3.068,1,"",4596],["g1","B",108.897,6.0054,1,"",9218],["g1","G1",191.485,10.8351,1,"",9218],["g1","G2",191.213,10.6233,1,"",9218],["g1","R",95.415,5.7813,1,"",9218],["g1","B",108.878,6.0633,1,"",9218],["g1","G1",191.49,10.8701,1,"",9218],["g1","G2",191.239,10.6465,1,"",9218],["g1","R",95.44,5.8221,1,"",9218],["g1","B",163.397,8.9524,1,"",13814],["g1","G1",287.324,15.9678,1,"",13814],["g1","G2",286.995,15.7826,1,"",13814],["g1","R",143.194,8.572,1,"",13814],["g1","B",163.391,8.8625,1,"",13814],["g1","G1",287.391,16.1309,1,"",13814],["g1","G2",287.087,15.8453,1,"",13814],["g1","R",143.218,8.4671,1,"",13814],["g1","B",245.621,13.5195,1,"",20735],["g1","G1",431.572,23.7896,1,"",20735],["g1","G2",431.225,24.001,1,"",20735],["g1","R",215.346,12.8283,1,"",20735],["g1","B",245.672,13.5565,1,"",20735],["g1","G1",431.556,23.3507,1,"",20735],["g1","G2",431.264,23.1892,1,"",20735],["g1","R",215.348,12.6742,1,"",20735],["g1","B",327.947,17.8046,1,"",27656],["g1","G1",575.269,31.1685,1,"",27656],["g1","G2",574.832,31.0128,1,"",27656],["g1","R",287.517,16.9972,1,"",27656],["g1","B",327.896,17.8702,1,"",27656],["g1","G1",575.272,30.9895,1,"",27656],["g1","G2",574.794,31.5471,1,"",27656],["g1","R",287.496,16.8765,1,"",27656],["g1","B",410.203,22.0251,1,"",34577],["g1","G1",718.33,38.6169,1,"",34577],["g1","G2",717.889,37.9657,1,"",34577],["g1","R",359.661,20.5642,1,"",34577],["g1","B",410.143,22.1234,1,"",34577],["g1","G1",718.362,38.2808,1,"",34577],["g1","G2",717.867,37.54,1,"",34577],["g1","R",359.668,20.9273,1,"",34577],["g1","B",492.093,26.0993,1,"",41498],["g1","G1",860.223,44.6323,1,"",41498],["g1","G2",859.757,45.7538,1,"",41498],["g1","R",431.674,25.3428,1,"",41498],["g1","B",492.092,26.3465,1,"",41498],["g1","G1",860.142,45.4776,1,"",41498],["g1","G2",859.607,44.4879,1,"",41498],["g1","R",431.662,25.3699,1,"",41498],["g1","B",601.263,30.3058,0,"other channel saturated",50717],["g1","G1",959.032,0.0247,0,"saturated pixels",50717],["g1","G2",959.033,0.019,0,"saturated pixels",50717],["g1","R",527.503,27.3828,0,"other channel saturated",50717],["g1","B",601.139,30.5794,0,"other channel saturated",50717],["g1","G1",959.033,0.0148,0,"saturated pixels",50717],["g1","G2",959.032,0.0181,0,"saturated pixels",50717],["g1","R",527.531,27.9949,0,"other channel saturated",50717],["g1","B",818.411,40.0518,0,"other channel saturated",69181],["g1","G1",959.037,0.0,0,"saturated pixels",69181],["g1","G2",959.036,0.0,0,"saturated pixels",69181],["g1","R",718.579,38.2972,0,"other channel saturated",69181],["g1","B",818.365,40.3847,0,"other channel saturated",69181],["g1","G1",959.037,0.0,0,"saturated pixels",69181],["g1","G2",959.036,0.0,0,"saturated pixels",69181],["g1","R",718.629,37.0564,0,"other channel saturated",69181],["g1","B",959.033,0.0,0,"saturated pixels",101460],["g1","G1",959.037,0.0,0,"saturated pixels",101460],["g1","G2",959.036,0.0,0,"saturated pixels",101460],["g1","R",959.03,0.0244,0,"saturated pixels",101460],["g1","B",959.033,0.0,0,"saturated pixels",101460],["g1","G1",959.037,0.0,0,"saturated pixels",101460],["g1","G2",959.036,0.0,0,"saturated pixels",101460],["g1","R",959.031,0.0157,0,"saturated pixels",101460],["g4","B",4.713,1.5203,0,"flicker (row-correlated excess)",106],["g4","G1",8.008,2.1929,0,"flicker (row-correlated excess)",106],["g4","G2",7.991,2.1819,0,"flicker (row-correlated excess)",106],["g4","R",4.094,1.5061,0,"flicker (row-correlated excess)",106],["g4","B",4.707,1.5382,0,"flicker (row-correlated excess)",106],["g4","G1",8.019,2.2147,0,"flicker (row-correlated excess)",106],["g4","G2",7.989,2.1754,0,"flicker (row-correlated excess)",106],["g4","R",4.112,1.4552,0,"flicker (row-correlated excess)",106],["g4","B",10.283,2.5141,1,"",240],["g4","G1",17.678,4.2757,1,"",240],["g4","G2",17.584,4.2767,1,"",240],["g4","R",8.988,2.3799,1,"",240],["g4","B",10.29,2.5012,1,"",240],["g4","G1",17.662,4.2694,1,"",240],["g4","G2",17.584,4.2006,1,"",240],["g4","R",9.011,2.3185,1,"",240],["g4","B",26.925,5.7088,1,"",641],["g4","G1",47.378,10.1972,1,"",641],["g4","G2",47.231,9.8305,1,"",641],["g4","R",23.63,5.3772,1,"",641],["g4","B",26.932,5.5514,1,"",641],["g4","G1",47.368,10.1873,1,"",641],["g4","G2",47.22,9.8717,1,"",641],["g4","R",23.648,5.3245,1,"",641],["g4","B",53.812,10.5265,1,"",1282],["g4","G1",94.735,19.6012,1,"",1282],["g4","G2",94.47,18.7047,1,"",1282],["g4","R",47.244,10.1943,1,"",1282],["g4","B",53.805,10.4414,1,"",1282],["g4","G1",94.73,19.9689,1,"",1282],["g4","G2",94.437,18.9075,1,"",1282],["g4","R",47.274,10.1144,1,"",1282],["g4","B",108.845,21.253,1,"",2591],["g4","G1",191.515,38.4263,1,"",2591],["g4","G2",191.006,37.1422,1,"",2591],["g4","R",95.585,20.1016,1,"",2591],["g4","B",108.887,20.5913,1,"",2591],["g4","G1",191.591,38.4104,1,"",2591],["g4","G2",191.092,37.9112,1,"",2591],["g4","R",95.627,19.8474,1,"",2591],["g4","B",162.71,31.0877,1,"",3874],["g4","G1",286.365,57.9598,1,"",3874],["g4","G2",285.774,54.7146,1,"",3874],["g4","R",142.984,30.3297,1,"",3874],["g4","B",162.721,30.8236,1,"",3874],["g4","G1",286.398,57.5932,1,"",3874],["g4","G2",285.909,56.6605,1,"",3874],["g4","R",142.95,29.8477,1,"",3874],["g4","B",244.753,46.6568,1,"",5825],["g4","G1",430.866,85.5513,1,"",5825],["g4","G2",430.145,83.9075,1,"",5825],["g4","R",215.138,43.9714,1,"",5825],["g4","B",244.608,46.4483,1,"",5825],["g4","G1",430.95,86.7071,1,"",5825],["g4","G2",430.1,84.5347,1,"",5825],["g4","R",215.084,43.1833,1,"",5825],["g4","B",325.787,61.1553,1,"",7749],["g4","G1",573.743,112.2306,1,"",7749],["g4","G2",572.782,110.9298,1,"",7749],["g4","R",286.326,58.7034,1,"",7749],["g4","B",325.822,61.4696,1,"",7749],["g4","G1",573.678,112.9589,1,"",7749],["g4","G2",572.696,110.3688,1,"",7749],["g4","R",286.326,58.5099,1,"",7749],["g4","B",407.974,76.6415,1,"",9699],["g4","G1",718.486,139.027,1,"",9699],["g4","G2",717.309,138.0406,1,"",9699],["g4","R",358.698,72.4898,1,"",9699],["g4","B",407.983,77.8367,1,"",9699],["g4","G1",718.393,138.3742,1,"",9699],["g4","G2",717.524,140.6256,1,"",9699],["g4","R",358.565,72.5505,1,"",9699],["g4","B",490.144,92.6922,1,"",11650],["g4","G1",862.892,168.7155,1,"",11650],["g4","G2",861.763,166.0579,1,"",11650],["g4","R",430.973,90.1852,1,"",11650],["g4","B",490.161,91.7266,1,"",11650],["g4","G1",863.023,166.7023,1,"",11650],["g4","G2",861.675,168.737,1,"",11650],["g4","R",430.796,87.6781,1,"",11650],["g4","B",599.523,104.2139,0,"other channel saturated",14242],["g4","G1",958.94,0.1622,0,"saturated pixels",14242],["g4","G2",958.927,0.2056,0,"saturated pixels",14242],["g4","R",527.102,92.3465,0,"other channel saturated",14242],["g4","B",599.602,105.3773,0,"other channel saturated",14242],["g4","G1",958.934,0.2526,0,"saturated pixels",14242],["g4","G2",958.931,0.1904,0,"saturated pixels",14242],["g4","R",527.059,90.8017,0,"other channel saturated",14242],["g4","B",817.151,139.2454,0,"other channel saturated",19399],["g4","G1",958.958,0.0,0,"saturated pixels",19399],["g4","G2",958.953,0.0,0,"saturated pixels",19399],["g4","R",718.603,122.9703,0,"other channel saturated",19399],["g4","B",817.211,138.7849,0,"other channel saturated",19399],["g4","G1",958.958,0.0,0,"saturated pixels",19399],["g4","G2",958.953,0.0,0,"saturated pixels",19399],["g4","R",718.48,125.2832,0,"other channel saturated",19399],["g4","B",958.957,0.0,0,"saturated pixels",28484],["g4","G1",958.958,0.0,0,"saturated pixels",28484],["g4","G2",958.953,0.0,0,"saturated pixels",28484],["g4","R",958.942,0.1381,0,"saturated pixels",28484],["g4","B",958.957,0.0,0,"saturated pixels",28484],["g4","G1",958.958,0.0,0,"saturated pixels",28484],["g4","G2",958.953,0.0,0,"saturated pixels",28484],["g4","R",958.938,0.1814,0,"saturated pixels",28484],["g16","B",9.591,10.1964,0,"flicker (row-correlated excess)",53],["g16","G1",16.634,16.4613,0,"flicker (row-correlated excess)",53],["g16","G2",16.499,16.3329,0,"flicker (row-correlated excess)",53],["g16","R",8.307,9.5316,0,"flicker (row-correlated excess)",53],["g16","B",9.627,10.0048,0,"flicker (row-correlated excess)",53],["g16","G1",16.634,16.1995,0,"flicker (row-correlated excess)",53],["g16","G2",16.506,16.3006,0,"flicker (row-correlated excess)",53],["g16","R",8.311,9.654,0,"flicker (row-correlated excess)",53],["g16","B",27.399,23.0328,0,"flicker (row-correlated excess)",160],["g16","G1",48.143,43.1361,0,"flicker (row-correlated excess)",160],["g16","G2",48.141,43.0908,0,"flicker (row-correlated excess)",160],["g16","R",24.139,22.4335,0,"flicker (row-correlated excess)",160],["g16","B",27.455,23.4362,0,"flicker (row-correlated excess)",160],["g16","G1",48.276,43.5675,0,"flicker (row-correlated excess)",160],["g16","G2",48.092,43.0554,0,"flicker (row-correlated excess)",160],["g16","R",24.028,22.6826,0,"flicker (row-correlated excess)",160],["g16","B",54.312,42.4658,1,"",320],["g16","G1",95.656,79.0219,1,"",320],["g16","G2",95.311,78.1408,1,"",320],["g16","R",47.843,40.7861,1,"",320],["g16","B",54.437,43.2073,1,"",320],["g16","G1",95.587,79.9125,1,"",320],["g16","G2",95.246,78.1814,1,"",320],["g16","R",47.78,41.0065,1,"",320],["g16","B",107.856,82.5606,1,"",641],["g16","G1",189.647,154.9858,1,"",641],["g16","G2",189.235,154.083,1,"",641],["g16","R",94.985,77.6595,1,"",641],["g16","B",107.745,80.7189,1,"",641],["g16","G1",189.649,153.8202,1,"",641],["g16","G2",189.226,149.6859,1,"",641],["g16","R",94.896,77.983,1,"",641],["g16","B",161.175,119.2425,1,"",961],["g16","G1",283.69,227.7274,1,"",961],["g16","G2",283.111,224.7633,1,"",961],["g16","R",142.001,116.1504,1,"",961],["g16","B",161.282,121.2284,1,"",961],["g16","G1",283.684,225.3347,1,"",961],["g16","G2",283.024,216.0201,1,"",961],["g16","R",141.942,117.0658,1,"",961],["g16","B",241.38,177.4501,1,"",1442],["g16","G1",425.392,334.3285,1,"",1442],["g16","G2",424.597,328.7089,1,"",1442],["g16","R",213.323,172.0639,1,"",1442],["g16","B",241.459,181.3843,1,"",1442],["g16","G1",425.495,338.9918,1,"",1442],["g16","G2",424.601,335.1198,1,"",1442],["g16","R",213.553,171.0991,1,"",1442],["g16","B",325.737,236.9703,1,"",1950],["g16","G1",574.754,455.8438,1,"",1950],["g16","G2",573.844,453.8211,1,"",1950],["g16","R",287.995,229.1185,1,"",1950],["g16","B",325.804,235.9448,1,"",1950],["g16","G1",574.734,455.1357,1,"",1950],["g16","G2",573.675,450.2395,1,"",1950],["g16","R",288.001,229.2201,1,"",1950],["g16","B",405.757,299.7861,1,"",2431],["g16","G1",716.616,564.2363,1,"",2431],["g16","G2",715.075,558.7339,1,"",2431],["g16","R",358.784,286.8248,1,"",2431],["g16","B",405.841,299.1538,1,"",2431],["g16","G1",716.386,566.5834,1,"",2431],["g16","G2",714.984,554.2249,1,"",2431],["g16","R",358.759,285.9394,1,"",2431],["g16","B",486.065,362.4837,0,"other channel saturated",2912],["g16","G1",857.958,681.9694,0,"saturated pixels",2912],["g16","G2",856.672,666.3965,0,"saturated pixels",2912],["g16","R",429.492,343.3235,0,"other channel saturated",2912],["g16","B",485.925,362.5596,0,"other channel saturated",2912],["g16","G1",857.895,674.8527,0,"saturated pixels",2912],["g16","G2",856.457,670.0168,0,"saturated pixels",2912],["g16","R",429.539,343.5172,0,"other channel saturated",2912],["g16","B",597.332,371.065,0,"other channel saturated",3580],["g16","G1",958.564,5.7373,0,"saturated pixels",3580],["g16","G2",958.507,6.003,0,"saturated pixels",3580],["g16","R",527.81,330.8991,0,"other channel saturated",3580],["g16","B",597.209,375.9733,0,"other channel saturated",3580],["g16","G1",958.521,6.7238,0,"saturated pixels",3580],["g16","G2",958.485,6.1729,0,"saturated pixels",3580],["g16","R",527.658,321.9699,0,"other channel saturated",3580],["g16","B",811.419,488.8164,0,"other channel saturated",4863],["g16","G1",958.852,0.0,0,"saturated pixels",4863],["g16","G2",958.802,0.0,0,"saturated pixels",4863],["g16","R",717.085,429.3907,0,"other channel saturated",4863],["g16","B",811.267,495.7837,0,"other channel saturated",4863],["g16","G1",958.852,0.0,0,"saturated pixels",4863],["g16","G2",958.802,0.0,0,"saturated pixels",4863],["g16","R",717.243,429.7533,0,"other channel saturated",4863],["g16","B",958.829,0.0,0,"saturated pixels",7161],["g16","G1",958.852,0.0,0,"saturated pixels",7161],["g16","G2",958.802,0.0,0,"saturated pixels",7161],["g16","R",958.593,4.0076,0,"saturated pixels",7161],["g16","B",958.829,0.0,0,"saturated pixels",7161],["g16","G1",958.852,0.0,0,"saturated pixels",7161],["g16","G2",958.802,0.0,0,"saturated pixels",7161],["g16","R",958.598,3.4583,0,"saturated pixels",7161]],"fits":{"g1":{"K":0.05428647173565657,"b":0.375542325751726,"r2":0.9972198351092485,"gain":1.1228070259094238},"g4":{"K":0.1945007509457121,"b":0.6346297698995099,"r2":0.9988811091833741,"gain":4.0},"g16":{"K":0.7707409730778009,"b":2.8997759418712246,"r2":0.9977228172175535,"gain":16.0}},"hdr":[[1.1228,858.0,0.01863,17.34,19.46],[1.1228,1073.0,0.0246,18.95,20.6],[1.1228,1502.0,0.03364,21.38,20.76],[1.1228,1717.0,0.03791,21.55,21.05],[1.1228,2146.0,0.04695,23.11,22.7],[1.1228,2790.0,0.06048,25.38,25.04],[1.1228,3434.0,0.07391,26.28,26.01],[1.1228,4293.0,0.09183,27.81,27.59],[1.1228,5151.0,0.10948,28.89,28.73],[1.1228,6439.0,0.1221,29.79,7.56],[1.1228,7727.0,0.12626,30.69,9.75],[1.1228,9444.0,0.13173,31.23,11.66],[1.1228,11805.0,0.1316,32.4,14.78],[16.0,12226.5,0.13204,22.42,5.08],[1.1228,14381.0,0.13477,33.2,17.09],[1.1228,17601.0,0.1418,33.97,14.04],[16.0,18339.7,0.1431,23.9,4.25],[16.0,21403.5,0.14539,24.7,6.25],[1.1228,21465.0,0.14577,34.67,16.23],[1.1228,26401.0,0.14688,35.34,18.63],[16.0,27516.7,0.14878,25.63,9.17],[1.1228,32197.0,0.15508,36.35,20.89],[16.0,33644.2,0.15695,26.54,11.37],[1.1228,39495.0,0.16285,36.97,22.86],[16.0,42821.2,0.16486,27.38,13.87],[1.1228,48296.0,0.16636,37.82,25.28],[16.0,51998.2,0.16834,28.17,16.17],[1.1228,59243.0,0.17532,38.87,27.64],[16.0,64224.7,0.17995,29.06,18.31],[1.1228,72551.0,0.18693,39.36,29.34],[16.0,79515.0,0.19249,28.13,18.65],[1.1228,88650.0,0.19738,36.36,24.02],[16.0,100932.7,0.20153,28.24,16.85],[1.1228,108613.0,0.20638,37.58,26.62],[16.0,125400.0,0.21814,28.75,18.56],[1.1228,132868.0,0.22397,38.14,28.22],[16.0,152931.0,0.23618,29.35,20.19],[1.1228,162704.0,0.24235,39.04,30.19],[16.0,189639.0,0.25189,30.36,22.51],[1.1228,198980.0,0.25546,39.95,32.39],[16.0,235524.0,0.27435,31.06,24.35],[1.1228,243413.0,0.28035,40.7,34.09],[16.0,290571.7,0.30566,32.02,26.19],[1.1228,297934.0,0.31032,42.21,36.47],[16.0,360924.0,0.33924,30.45,23.63],[1.1228,364690.0,0.34096,41.22,34.45],[1.1228,446204.0,0.37404,42.25,36.43],[16.0,446566.5,0.37336,31.25,25.44],[1.1228,545949.0,0.42307,42.7,37.55],[16.0,553626.7,0.42319,31.73,26.7],[1.1228,667971.0,0.47889,43.73,39.26],[16.0,682090.5,0.47951,32.86,28.56],[1.1228,817294.0,0.53103,45.15,41.53],[16.0,844212.7,0.5375,34.13,30.7],[1.1228,999974.0,0.61641,44.81,41.65],[16.0,1046092.5,0.63322,33.95,34.93],[16.0,1290793.5,0.79914,31.28,32.07],[16.0,1596669.7,0.99481,39.62,null],[16.0,1972898.2,0.99896,null,null],[16.0,2440882.5,0.99896,null,null],[16.0,3015941.2,0.99896,null,null]],"t_sat_normal_us":46136.0448897748,"segments":[{"E":[858.0,1073.0],"level":[0.018631124645626954,0.024596690634368482]},{"E":[1502.0,5151.0],"level":[0.03364274996537735,0.10947520839782651]},{"E":[6439.0,14381.0],"level":[0.1220969318473426,0.13477224403675703]},{"E":[17601.0,79514.99940756708],"level":[0.14179746053017467,0.19249331540932124]},{"E":[88650.0,297934.0],"level":[0.1973830969912914,0.3103167361835245]},{"E":[360923.99731090665,999974.0],"level":[0.3392371057345298,0.6164074083314325]},{"E":[1046092.4922060035,1290793.490382839],"level":[0.6332215278315221,0.7991435157370145]}]}</script>
+<script>
+(function () {
+  "use strict";
+  var D = JSON.parse(document.getElementById("report-data").textContent);
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function fmtNum(v) {
+    if (v >= 1000) return v.toLocaleString("en-US");
+    if (v >= 1) return String(+v.toPrecision(3));
+    return String(+v.toPrecision(2));
+  }
+  function logTicks(min, max) {
+    var out = [], lo = Math.floor(Math.log10(min)), hi = Math.ceil(Math.log10(max));
+    for (var p = lo; p <= hi; p++) {
+      [1, 2, 5].forEach(function (m) {
+        var v = m * Math.pow(10, p);
+        if (v >= min * 0.999 && v <= max * 1.001) out.push({ v: v, major: m === 1 });
+      });
+    }
+    return out;
+  }
+  function linTicks(min, max, step) {
+    var out = [];
+    for (var v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push({ v: v, major: true });
+    return out;
+  }
+
+  // cfg: {w,h,m:{l,r,t,b}, x:{log,min,max,label,ticks}, y:{...}, bands:[], lines:[], dots:[], vlines:[], aria}
+  function plot(container, cfg) {
+    var w = cfg.w, h = cfg.h, m = cfg.m;
+    var svg = el("svg", { viewBox: "0 0 " + w + " " + h, role: "img", "aria-label": cfg.aria });
+    container.appendChild(svg);
+    var tip = document.createElement("div");
+    tip.className = "tip";
+    container.appendChild(tip);
+    function sc(ax, a0, a1) {
+      if (ax.log) {
+        var l0 = Math.log10(ax.min), l1 = Math.log10(ax.max);
+        return function (v) { return a0 + (Math.log10(v) - l0) / (l1 - l0) * (a1 - a0); };
+      }
+      return function (v) { return a0 + (v - ax.min) / (ax.max - ax.min) * (a1 - a0); };
+    }
+    var X = sc(cfg.x, m.l, w - m.r), Y = sc(cfg.y, h - m.b, m.t);
+    var g = el("g", {}, svg);
+    // bands
+    (cfg.bands || []).forEach(function (b) {
+      el("rect", { x: X(b.x0), y: m.t, width: X(b.x1) - X(b.x0), height: h - m.b - m.t, fill: "var(--band)" }, g);
+    });
+    // grid + ticks
+    var xt = cfg.x.ticks || (cfg.x.log ? logTicks(cfg.x.min, cfg.x.max) : linTicks(cfg.x.min, cfg.x.max, cfg.x.step));
+    var yt = cfg.y.ticks || (cfg.y.log ? logTicks(cfg.y.min, cfg.y.max) : linTicks(cfg.y.min, cfg.y.max, cfg.y.step));
+    xt.forEach(function (t) {
+      var x = X(t.v);
+      el("line", { x1: x, x2: x, y1: m.t, y2: h - m.b, stroke: "var(--grid)", "stroke-width": t.major ? 1 : 0.5 }, g);
+      if (t.major || !cfg.x.log || cfg.x.minorLabels) {
+        var tx = el("text", { x: x, y: h - m.b + 16, "text-anchor": "middle", "font-size": 11, fill: "var(--text-muted)" }, g);
+        tx.textContent = (cfg.x.fmt || fmtNum)(t.v);
+      }
+    });
+    yt.forEach(function (t) {
+      var y = Y(t.v);
+      el("line", { x1: m.l, x2: w - m.r, y1: y, y2: y, stroke: "var(--grid)", "stroke-width": t.major ? 1 : 0.5 }, g);
+      if (t.major || !cfg.y.log || cfg.y.minorLabels) {
+        var ty = el("text", { x: m.l - 6, y: y + 4, "text-anchor": "end", "font-size": 11, fill: "var(--text-muted)" }, g);
+        ty.textContent = (cfg.y.fmt || fmtNum)(t.v);
+      }
+    });
+    el("line", { x1: m.l, x2: w - m.r, y1: h - m.b, y2: h - m.b, stroke: "var(--axis)", "stroke-width": 1 }, g);
+    el("line", { x1: m.l, x2: m.l, y1: m.t, y2: h - m.b, stroke: "var(--axis)", "stroke-width": 1 }, g);
+    var xl = el("text", { x: (m.l + w - m.r) / 2, y: h - 6, "text-anchor": "middle", "font-size": 12, fill: "var(--text-secondary)" }, g);
+    xl.textContent = cfg.x.label;
+    var yl = el("text", { x: 12, y: (m.t + h - m.b) / 2, "text-anchor": "middle", "font-size": 12, fill: "var(--text-secondary)", transform: "rotate(-90 12 " + (m.t + h - m.b) / 2 + ")" }, g);
+    yl.textContent = cfg.y.label;
+    // clip
+    var cid = "c" + Math.random().toString(36).slice(2);
+    var cp = el("clipPath", { id: cid }, el("defs", {}, svg));
+    el("rect", { x: m.l, y: m.t, width: w - m.l - m.r, height: h - m.t - m.b }, cp);
+    var plotG = el("g", { "clip-path": "url(#" + cid + ")" }, svg);
+    (cfg.vlines || []).forEach(function (v) {
+      var x = X(v.x);
+      el("line", { x1: x, x2: x, y1: m.t, y2: h - m.b, stroke: "var(--ref-line)", "stroke-width": 1 }, plotG);
+      var t = el("text", { x: x + (v.anchor === "end" ? -5 : 5), y: m.t + 13 + (v.dy || 0), "text-anchor": v.anchor || "start", "font-size": 11, fill: "var(--text-secondary)" }, svg);
+      t.textContent = v.label;
+    });
+    (cfg.lines || []).forEach(function (ln) {
+      var d = ln.pts.map(function (p, i) { return (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1); }).join("");
+      el("path", { d: d, fill: "none", stroke: ln.color, "stroke-width": ln.width || 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, plotG);
+      if (ln.label) {
+        var lp = ln.labelAt;
+        var t = el("text", { x: X(lp[0]) + (lp[2] || 0), y: Y(lp[1]) + (lp[3] || 0), "font-size": 11, fill: "var(--text-secondary)", "text-anchor": lp[4] || "start" }, svg);
+        t.textContent = ln.label;
+      }
+    });
+    var hits = [];
+    (cfg.dots || []).forEach(function (s) {
+      var r = s.r || 4;
+      s.pts.forEach(function (p) {
+        var cx = X(p[0]), cy = Y(p[1]);
+        var c = s.hollow
+          ? el("circle", { cx: cx, cy: cy, r: r - 0.5, fill: "var(--surface-1)", stroke: s.color, "stroke-width": 1.5 }, plotG)
+          : el("circle", { cx: cx, cy: cy, r: r, fill: s.color, stroke: "var(--surface-1)", "stroke-width": 2 }, plotG);
+        hits.push({ x: cx, y: cy, c: c, html: s.tip(p), r: r });
+      });
+    });
+    var hl = el("circle", { r: 7, fill: "none", stroke: "var(--text-primary)", "stroke-width": 1.5, opacity: 0, "pointer-events": "none" }, svg);
+    var ov = el("rect", { x: m.l, y: m.t, width: w - m.l - m.r, height: h - m.t - m.b, fill: "transparent" }, svg);
+    function move(ev) {
+      var pt = svg.createSVGPoint();
+      var src = ev.touches ? ev.touches[0] : ev;
+      pt.x = src.clientX; pt.y = src.clientY;
+      var p = pt.matrixTransform(svg.getScreenCTM().inverse());
+      var best = null, bd = 400;
+      hits.forEach(function (hh) {
+        var d = (hh.x - p.x) * (hh.x - p.x) + (hh.y - p.y) * (hh.y - p.y);
+        if (d < bd) { bd = d; best = hh; }
+      });
+      if (!best) { tip.style.opacity = 0; hl.setAttribute("opacity", 0); return; }
+      hl.setAttribute("cx", best.x); hl.setAttribute("cy", best.y); hl.setAttribute("opacity", 1);
+      tip.innerHTML = best.html;
+      var rect = svg.getBoundingClientRect(), crect = container.getBoundingClientRect();
+      var sx = rect.width / w;
+      var left = best.x * sx + (rect.left - crect.left) + 12, top = best.y * sx + (rect.top - crect.top) - 10;
+      tip.style.opacity = 1;
+      var tw = tip.offsetWidth;
+      if (left + tw > crect.width) left = best.x * sx + (rect.left - crect.left) - tw - 12;
+      tip.style.left = Math.max(0, left) + "px";
+      tip.style.top = Math.max(0, top) + "px";
+    }
+    ov.addEventListener("mousemove", move);
+    ov.addEventListener("touchstart", move, { passive: true });
+    ov.addEventListener("mouseleave", function () { tip.style.opacity = 0; hl.setAttribute("opacity", 0); });
+  }
+
+  // ---------- Figure 1: PTC ----------
+  var css = getComputedStyle(document.documentElement);
+  var gains = [["g1", "게인 1.1228"], ["g4", "게인 4"], ["g16", "게인 16"]];
+  var panels = document.getElementById("ptc-panels");
+  gains.forEach(function (gl) {
+    var key = gl[0], fit = D.fits[key];
+    var wrap = document.createElement("div");
+    var ttl = document.createElement("p");
+    ttl.className = "panel-title";
+    ttl.textContent = gl[1] + " · K " + fit.K.toFixed(4) + " DN/e⁻ · R² " + fit.r2.toFixed(4);
+    wrap.appendChild(ttl);
+    var box = document.createElement("div");
+    box.className = "chart";
+    wrap.appendChild(box);
+    panels.appendChild(wrap);
+    var pts = D.ptc.filter(function (p) { return p[0] === key && p[2] > 0.5 && p[3] > 0.05; });
+    function xy(p) { return [p[2], p[3], p]; }
+    var used = pts.filter(function (p) { return p[4]; }).map(xy), exc = pts.filter(function (p) { return !p[4]; }).map(xy);
+    function tipf(q) {
+      var p = q[2];
+      return "<b>" + p[1] + "</b> · 노출 " + p[6].toLocaleString("en-US") + " µs<br>평균 " + p[2].toFixed(1) + " DN · 분산 " + p[3].toFixed(2) + " DN²" +
+        (p[4] ? "" : "<br><span class='t2'>제외: " + p[5] + "</span>");
+    }
+    var line = [];
+    for (var i = 0; i <= 40; i++) {
+      var mu = Math.pow(10, Math.log10(1) + i / 40 * (Math.log10(1000) - Math.log10(1)));
+      line.push([mu, fit.K * mu + fit.b]);
+    }
+    plot(box, {
+      w: 340, h: 280, m: { l: 46, r: 10, t: 10, b: 40 },
+      aria: gl[1] + " 광자 전달 곡선",
+      x: { log: true, min: 1, max: 1500, label: "평균 [DN, 블랙 제외]", ticks: logTicks(1, 1000) },
+      y: { log: true, min: 0.2, max: 1000, label: "분산 [DN²]" },
+      lines: [{ pts: line, color: "var(--series-2)", width: 2 }],
+      dots: [
+        { pts: exc, color: "var(--neutral-mark)", hollow: true, r: 4, tip: tipf },
+        { pts: used, color: "var(--series-1)", r: 4, tip: tipf }
+      ]
+    });
+  });
+
+  // ---------- Figure 2: HDR response ----------
+  var tsat = D.t_sat_normal_us / 1000;
+  var g1 = D.hdr.filter(function (s) { return Math.abs(s[0] - 1.1228) < 0.01; });
+  var g16 = D.hdr.filter(function (s) { return Math.abs(s[0] - 16) < 0.01; });
+  function hdrTip(s) {
+    var e = s[1] / 1000;
+    return "<b>게인 " + (s[0] > 2 ? "16" : "1.1228") + "</b> · E " + (e < 10 ? e.toFixed(2) : e.toFixed(1)) + " ms<br>출력 " + s[2].toFixed(4) +
+      "<br><span class='t2'>일반 모드 직선 대비 " + ((s[2] / (e / tsat) - 1) * 100).toFixed(1) + "%</span>";
+  }
+  function msFmt(v) { return v >= 1000 ? (v / 1000) + " s" : fmtNum(v); }
+  plot(document.getElementById("hdr-response"), {
+    w: 680, h: 340, m: { l: 52, r: 14, t: 12, b: 42 },
+    aria: "센서 HDR 모드 응답 곡선",
+    x: { log: true, min: 0.5, max: 3000, label: "유효 노출 E [ms]", fmt: msFmt },
+    y: { log: true, min: 0.01, max: 1.2, label: "출력 (정규화)", ticks: logTicks(0.01, 1) },
+    bands: [{ x0: 5.151, x1: 6.439 }],
+    vlines: [
+      { x: tsat, label: "일반 모드 포화 46 ms", anchor: "end", dy: 0 },
+      { x: 1596.7, label: "HDR 포화 ≈ 1.6 s", anchor: "end", dy: 262 }
+    ],
+    lines: [{ pts: [[0.5, 0.5 / tsat], [tsat, 1]], color: "var(--ref-line)", width: 1.5, label: "일반 모드 감도", labelAt: [15, 15 / tsat, -8, 4, "end"] }],
+    dots: [
+      { pts: g1.map(function (s) { return [s[1] / 1000, s[2], s]; }), color: "var(--series-1)", tip: function (p) { return hdrTip(p[2]); } },
+      { pts: g16.map(function (s) { return [s[1] / 1000, s[2], s]; }), color: "var(--series-2)", tip: function (p) { return hdrTip(p[2]); } }
+    ]
+  });
+  // table view
+  var tb = document.getElementById("hdr-table");
+  var rows = "<thead><tr><th>게인</th><th class='num'>E [ms]</th><th class='num'>출력</th><th class='num'>출력 SNR [dB]</th><th class='num'>장면 기준 SNR [dB]</th></tr></thead><tbody>";
+  D.hdr.slice().sort(function (a, b) { return a[1] - b[1]; }).forEach(function (s) {
+    rows += "<tr><td>" + (s[0] > 2 ? "16" : "1.1228") + "</td><td class='num'>" + (s[1] / 1000).toFixed(2) + "</td><td class='num'>" + s[2].toFixed(4) +
+      "</td><td class='num'>" + (s[3] == null ? "—" : s[3].toFixed(2)) + "</td><td class='num'>" + (s[4] == null ? "—" : s[4].toFixed(2)) + "</td></tr>";
+  });
+  tb.innerHTML = rows + "</tbody>";
+
+  // ---------- Figure 3: HDR SNR ----------
+  var a = 5.660737407263459e-05, b = 4.0833976754083865e-07;
+  var model = [];
+  for (var k = 0; k <= 60; k++) {
+    var e = Math.pow(10, Math.log10(0.5) + k / 60 * (Math.log10(tsat) - Math.log10(0.5)));
+    var x = e / tsat;
+    model.push([e, 20 * Math.log10(x / Math.sqrt(a * x + b))]);
+  }
+  var snrIn = g1.filter(function (s) { return s[4] != null; });
+  var snrOut = g1.filter(function (s) { return s[3] != null; });
+  function snrTip(kind) {
+    return function (p) {
+      var s = p[2], e = s[1] / 1000;
+      return "<b>" + kind + "</b> · E " + (e < 10 ? e.toFixed(2) : e.toFixed(1)) + " ms<br>출력 SNR " + s[3].toFixed(1) + " dB<br>장면 기준 SNR " + (s[4] == null ? "—" : s[4].toFixed(1) + " dB");
+    };
+  }
+  plot(document.getElementById("hdr-snr"), {
+    w: 680, h: 320, m: { l: 52, r: 14, t: 12, b: 42 },
+    aria: "센서 HDR 모드 SNR 비교",
+    x: { log: true, min: 0.5, max: 3000, label: "유효 노출 E [ms]", fmt: msFmt },
+    y: { log: false, min: 0, max: 50, step: 10, label: "SNR [dB]" },
+    bands: [{ x0: 5.151, x1: 6.439 }],
+    vlines: [{ x: tsat, label: "일반 모드 포화", anchor: "end" }],
+    lines: [{ pts: model, color: "var(--series-3)", width: 2 }],
+    dots: [
+      { pts: snrOut.map(function (s) { return [s[1] / 1000, s[3], s]; }), color: "var(--series-2)", tip: snrTip("출력 기준") },
+      { pts: snrIn.map(function (s) { return [s[1] / 1000, s[4], s]; }), color: "var(--series-1)", tip: snrTip("장면 기준") }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

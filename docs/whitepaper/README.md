@@ -11,6 +11,10 @@
 개발 명세는 [CLAUDE.md](../../CLAUDE.md), 실제 결정과 수치는 [decisions.md](../decisions.md), Pi 실측 사실은 [pi_notes.md](../pi_notes.md)에 있다.
 백서는 이 문서들을 **설명하는** 문서이고, 수치가 다르면 decisions.md가 맞다.
 
+Phase별 결과 보고서는 [docs/reports/](../reports/)에 있다. 보고서는 백서의 각 주장을 측정 결과와 대조해 확인·보정·미해결로 판정한다.
+- [Phase 0·1 결과 보고서](../reports/phase1_report.html): 촬영 체계, PTC와 노이즈 모델, 센서 HDR 모드, Phase 2·3 예비 계산
+- [Phase 2 결과 보고서](../reports/phase2_report.html): 브래킷 합성과 DCG, 합성 후 노이즈 해석 모델과 플랫필드 실측, 노출비 편차와 경계 띠 해석
+
 ---
 
 ## 1분 요약
@@ -34,7 +38,7 @@
 | [1](01_overview.md) | 문제 정의와 프로젝트 전체 그림 | 전체 | 작성 |
 | [2](02_light_and_sensor.md) | 빛, 센서, RAW — 카메라는 무엇을 재는가 | 0, 1 | 작성 (Phase 0·1 실측 반영) |
 | [3](03_noise_and_ptc.md) | 노이즈의 과학과 PTC 측정 | 1 | 작성 (Phase 1 실측 반영) |
-| [4](04_dynamic_range.md) | DR 확보: 브래킷 합성과 DCG | 2 | 원리 작성, 실측 대기 |
+| [4](04_dynamic_range.md) | DR 확보: 브래킷 합성과 DCG | 2 | 작성 (Phase 2 실측 반영) |
 | [5](05_hlog_curve.md) | 전달 곡선과 H-Log 설계 | 3 | 원리 작성, 결과 대기 |
 | [6](06_isp_pipeline.md) | ISP와 듀얼 파이프라인 | 4 | 원리 작성 |
 | [7](07_video_codec.md) | 영상 압축과 압축 강건성 | 5 | 원리 작성 |
