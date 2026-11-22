@@ -39,7 +39,7 @@ Phase별 결과 보고서는 [docs/reports/](../reports/)에 있다. 보고서�
 | [2](02_light_and_sensor.md) | 빛, 센서, RAW — 카메라는 무엇을 재는가 | 0, 1 | 작성 (Phase 0·1 실측 반영) |
 | [3](03_noise_and_ptc.md) | 노이즈의 과학과 PTC 측정 | 1 | 작성 (Phase 1 실측 반영) |
 | [4](04_dynamic_range.md) | DR 확보: 브래킷 합성과 DCG | 2 | 작성 (Phase 2 실측 반영) |
-| [5](05_hlog_curve.md) | 전달 곡선과 H-Log 설계 | 3 | 원리 작성, 결과 대기 |
+| [5](05_hlog_curve.md) | 전달 곡선과 H-Log 설계 | 3 | 작성 (Phase 3 결과 반영) |
 | [6](06_isp_pipeline.md) | ISP와 듀얼 파이프라인 | 4 | 원리 작성 |
 | [7](07_video_codec.md) | 영상 압축과 압축 강건성 | 5 | 원리 작성 |
 | [8](08_restore_and_ocr.md) | 복원 도구, 무결성, 번호판 평가 | 6 | 원리 작성 |

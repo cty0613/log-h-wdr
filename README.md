@@ -100,7 +100,19 @@ build/release/apps/hdr_merge --config configs/hdr_merge.json --in <bracket_dir> 
 build/release/apps/dcg_sim --config configs/dcg_assumptions.json --in <merged.npy> --out <dir>
 ```
 
-## 7. 저장소 구조
+## 7. Phase 3: HDR 대응 H-Log (곡선, 비교, 고정소수점 LUT)
+
+규칙과 결과는 [docs/decisions.md](docs/decisions.md) 2026-11-22 Phase 3 항목, LUT 오차 표는 [docs/fixed_point.md](docs/fixed_point.md)에 있다. 촬영은 필요 없다.
+
+```bash
+# 곡선 JSON 생성(configs/curves/) + 곡선 6종 R(x) + DR 대비 필요 비트 + LUT 오차 표
+python experiments/p3_curves.py configs/p3_curves.yaml   # → results/p3/conclusion.md
+
+# C++ CLI 단독 사용
+build/release/apps/curve_eval --config configs/curves/hlog_R16.json --out <dir> --bits 8,10,12 --lut
+```
+
+## 8. 저장소 구조
 
 ```
 core/        C++ 라이브러리 cctvlog_core (include/cctvlog, src/{io,hdr,isp,curves,codec})

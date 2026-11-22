@@ -1,0 +1,7 @@
+{
+  "type": "rec709",
+  "name": "rec709",
+  "x_max": 16.0,
+  "input_scale_rule": "x_max -> domain upper bound (decisions.md 2026-11-22 결정 1)",
+  "params_hash": "613d02375eca39c5ecdd7cd08fc25ce9a5ad6be9fd5169ab70a46d65cf9d8811"
+}

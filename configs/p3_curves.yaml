@@ -1,0 +1,34 @@
+# Phase 3 곡선 평가 (experiments/p3_curves.py). 규칙: docs/decisions.md 2026-11-22 Phase 3 착수
+name: p3_curves
+noise:
+  single: configs/noise_single_g1.json
+  R4: configs/noise_bracket_R4.json
+  R16: configs/noise_bracket_R16.json
+  R16_2f: configs/noise_bracket_R16_2f.json
+  dcg: configs/noise_dcg.json
+curves_dir: configs/curves          # 곡선 JSON 출력 (C++ 입력)
+comparison_x_max: 16.0              # 결정 1: 데이터 x_max → 각 곡선 정의역 상한
+# 곡선 6종 (CLAUDE.md Phase 3) + 참고 곡선
+curves:
+  rec709: {kind: comparison, type: rec709}
+  hlg: {kind: comparison, type: hlg}
+  slog3: {kind: comparison, type: slog3}
+  hlog_single: {kind: hlog, noise: single_ext16}   # 결정 2: 단일 노출 모델을 x_max 16으로 늘림
+  hlog_R16: {kind: hlog, noise: R16}
+  hlog_dcg: {kind: hlog, noise: dcg}
+  hlog_R16_2f: {kind: hlog, noise: R16_2f, extra: true}
+  hlog_R4: {kind: hlog, noise: R4, extra: true}
+  hlog_single_g1: {kind: hlog, noise: single, extra: true}   # 단일 노출 데이터용 (x_max 1)
+scenarios:   # 결정 2: 데이터의 실제 노이즈로 R(x) 평가
+  - {name: bracket_R16, data: R16, matched: hlog_R16, label: "bracket R=16 (16:4:1) data"}
+  - {name: dcg, data: dcg, matched: hlog_dcg, label: "DCG g=4 data"}
+six: [rec709, hlg, slog3, hlog_single, hlog_R16, hlog_dcg]
+bits: [8, 10, 12]
+ramp_n: 200001
+ramp_min: 1.0e-5
+lut_curves: [hlog_R16, hlog_R16_2f, hlog_R4, hlog_dcg, hlog_single, hlog_single_g1]
+h2:
+  k_max: 12            # R = 2^(k/2), k = 0..12 → 1 ~ 64
+  dcg_g: [2, 4, 8]
+  dcg_config: configs/dcg_assumptions.json
+conclusion_copy: results/p3/conclusion.md

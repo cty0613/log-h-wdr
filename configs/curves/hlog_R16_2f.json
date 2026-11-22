@@ -1,0 +1,34 @@
+{
+  "type": "hlog",
+  "name": "hlog_R16_2f",
+  "x_max": 16.0,
+  "N": 430.42832708634035,
+  "k": 0.0023232671668456622,
+  "required_bits": 9,
+  "R_const": {
+    "8": 1.6879542238680014,
+    "10": 0.42075105287032294,
+    "12": 0.1051107025851869
+  },
+  "segments": [
+    {
+      "x_start": 0.0,
+      "a": 5.660737407263459e-05,
+      "b": 4.0833976754083865e-07,
+      "c_start": 0.0
+    },
+    {
+      "x_start": 0.9,
+      "a": 0.0009057179851621535,
+      "b": 0.0001045349804904547,
+      "c_start": 0.5357777280544102
+    }
+  ],
+  "noise_kind": "bracket",
+  "source": {
+    "noise": "R16_2f",
+    "noise_json": "configs/noise_bracket_R16_2f.json",
+    "noise_sha256": "9579fd75b5af0e7ac5e2c90c4d01edf8a0ae8b9dd9aed83c29c960e3e5cca98b"
+  },
+  "params_hash": "3930fb883f4bb3664ab1bb85b006de482d6118bbbc77b9692a27fe40ce9979c2"
+}

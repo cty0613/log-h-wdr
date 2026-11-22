@@ -1,0 +1,7 @@
+{
+  "type": "slog3",
+  "name": "slog3",
+  "x_max": 16.0,
+  "input_scale_rule": "x_max -> domain upper bound (decisions.md 2026-11-22 결정 1)",
+  "params_hash": "d80b4b5f31734f7d0eeb2f2bc2a796d874b766a15c6c06d00e64678070543659"
+}

@@ -1,0 +1,34 @@
+{
+  "type": "hlog",
+  "name": "hlog_R4",
+  "x_max": 4.0,
+  "N": 369.2980261464092,
+  "k": 0.0027078400890329897,
+  "required_bits": 9,
+  "R_const": {
+    "8": 1.4482275535153302,
+    "10": 0.3609951379730295,
+    "12": 0.0901826681676213
+  },
+  "segments": [
+    {
+      "x_start": 0.0,
+      "a": 5.660737407263459e-05,
+      "b": 4.0833976754083865e-07,
+      "c_start": 0.0
+    },
+    {
+      "x_start": 0.9,
+      "a": 0.00022642949629053837,
+      "b": 6.5334362806534185e-06,
+      "c_start": 0.6244655937726362
+    }
+  ],
+  "noise_kind": "bracket",
+  "source": {
+    "noise": "R4",
+    "noise_json": "configs/noise_bracket_R4.json",
+    "noise_sha256": "d6f052d669dc3f1a87bcf66ea6194aacf2964823745d226f1d9081a8ebdf24a7"
+  },
+  "params_hash": "76ebd19b6b4dc1bb0ba35b98eabe04c9cd6dca280c897bc728e2b3b582920fd3"
+}

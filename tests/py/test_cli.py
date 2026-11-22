@@ -37,14 +37,15 @@ def test_missing_app_raises(tmp_path, monkeypatch):
         cli.run_cpp("does_not_exist")
 
 
-def test_curve_eval_stub_writes_run_json(tmp_path):
+def test_curve_eval_writes_run_json(tmp_path):
     config = tmp_path / "config.json"
-    config.write_text(json.dumps({"curve": "cctvlog", "bits": 10}))
+    curve = {"type": "rec709", "name": "rec709", "x_max": 16.0}
+    config.write_text(json.dumps(curve))
     out = tmp_path / "out"
-    cli.run_cpp("curve_eval", config=config, out=out)
+    cli.run_cpp("curve_eval", config=config, out=out, bits=10, ramp_n=100)
     run = json.loads((out / "run.json").read_text())
     assert run["app"] == "curve_eval"
-    assert run["params"] == {"curve": "cctvlog", "bits": 10}
+    assert run["params"] == curve
     for key in ("version", "git_commit", "timings_ms", "total_ms", "libraries"):
         assert key in run
     assert run["libraries"]["x265"]

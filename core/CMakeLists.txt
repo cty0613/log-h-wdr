@@ -5,6 +5,7 @@ add_library(cctvlog_core
   src/codec/ffmpeg_info.cpp
   src/hdr/bracket_merge.cpp
   src/hdr/dcg_simulate.cpp
+  src/curves/curves.cpp
   ${CCTVLOG_GIT_INFO_CPP}
 )
 add_library(cctvlog::core ALIAS cctvlog_core)

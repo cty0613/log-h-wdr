@@ -1,0 +1,26 @@
+{
+  "type": "hlog",
+  "name": "hlog_single",
+  "x_max": 16.0,
+  "N": 1040.9568733239596,
+  "k": 0.0009606545915843977,
+  "required_bits": 11,
+  "R_const": {
+    "8": 4.082183816956705,
+    "10": 1.0175531508543105,
+    "12": 0.2542019226676336
+  },
+  "segments": [
+    {
+      "x_start": 0.0,
+      "a": 5.660737407263459e-05,
+      "b": 4.0833976754083865e-07,
+      "c_start": 0.0
+    }
+  ],
+  "noise_kind": "single_extended",
+  "source": {
+    "noise": "single_ext16"
+  },
+  "params_hash": "fd87713f4eebe4a4890e6ab6c901682b208cee9c95886547d126bb3c084f16ce"
+}

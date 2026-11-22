@@ -8,6 +8,7 @@ add_executable(cctvlog_tests
   test_random.cpp
   test_bracket_merge.cpp
   test_dcg.cpp
+  test_curves.cpp
 )
 target_link_libraries(cctvlog_tests PRIVATE
   cctvlog::core cctvlog_warnings GTest::gtest GTest::gtest_main)

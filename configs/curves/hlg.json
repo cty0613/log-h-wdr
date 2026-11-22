@@ -1,0 +1,7 @@
+{
+  "type": "hlg",
+  "name": "hlg",
+  "x_max": 16.0,
+  "input_scale_rule": "x_max -> domain upper bound (decisions.md 2026-11-22 결정 1)",
+  "params_hash": "0517499cba4c0440e05dbbaaaad8a6596a952c004e95bca9be8f07cc93253a3f"
+}
